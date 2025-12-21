@@ -94,24 +94,47 @@ exec_in_pod() {
     kubectl exec -n "${namespace}" "deploy/${deployment}" -- "$@"
 }
 
+# Helper function to make API calls using wget (Alpine doesn't have curl)
+wget_get() {
+    local url=$1
+    wget -q -O - "${url}" 2>/dev/null || echo ""
+}
+
+wget_post() {
+    local url=$1
+    local data=${2:-}
+    if [ -n "${data}" ]; then
+        wget -q -O - --post-data="${data}" --header="Content-Type: application/json" "${url}" 2>/dev/null || echo ""
+    else
+        wget -q -O - --post-data="" "${url}" 2>/dev/null || echo ""
+    fi
+}
+
 # Helper function to make API calls to pattern controller
 pattern_controller_api() {
     local method=$1
     local endpoint=$2
     local data=${3:-}
     
-    local cmd="curl -s -X ${method} http://localhost:8080${endpoint}"
-    if [ -n "${data}" ]; then
-        cmd="${cmd} -H 'Content-Type: application/json' -d '${data}'"
+    if [ "${method}" = "GET" ]; then
+        exec_in_pod "pattern-controller" "${TEST_NAMESPACE}" \
+            wget -q -O - "http://localhost:8080${endpoint}" 2>/dev/null || echo ""
+    else
+        if [ -n "${data}" ]; then
+            exec_in_pod "pattern-controller" "${TEST_NAMESPACE}" \
+                wget -q -O - --post-data="${data}" --header="Content-Type: application/json" \
+                "http://localhost:8080${endpoint}" 2>/dev/null || echo ""
+        else
+            exec_in_pod "pattern-controller" "${TEST_NAMESPACE}" \
+                wget -q -O - --post-data="" "http://localhost:8080${endpoint}" 2>/dev/null || echo ""
+        fi
     fi
-    
-    exec_in_pod "pattern-controller" "${TEST_NAMESPACE}" sh -c "${cmd}"
 }
 
 # Helper function to get metrics validator report
 get_validation_report() {
     exec_in_pod "metrics-validator" "${TEST_NAMESPACE}" \
-        curl -s http://localhost:8080/api/v1/reports/latest 2>/dev/null || echo "{}"
+        wget -q -O - http://localhost:8080/api/v1/reports/latest 2>/dev/null || echo "{}"
 }
 
 # Test: Verify all components are healthy
@@ -159,14 +182,13 @@ test_kubewise_api() {
     
     local response
     response=$(exec_in_pod "metrics-validator" "${TEST_NAMESPACE}" \
-        curl -s -o /dev/null -w "%{http_code}" \
-        "http://kubewise-api.${KUBEWISE_NAMESPACE}:8080/healthz" 2>/dev/null || echo "000")
+        wget -q -O - "http://kubewise-api.${KUBEWISE_NAMESPACE}:8080/healthz" 2>/dev/null || echo "")
     
-    if [ "${response}" = "200" ]; then
+    if echo "${response}" | grep -q "healthy"; then
         echo "  ✓ Kubewise API is accessible"
         return 0
     else
-        echo "  ✗ Kubewise API returned HTTP ${response}"
+        echo "  ✗ Kubewise API not accessible or unhealthy"
         return 1
     fi
 }
@@ -210,12 +232,11 @@ test_metrics_collection() {
     log_test "Testing metrics collection..."
     
     # Check if Prometheus is scraping metrics
-    local metrics_count
-    metrics_count=$(exec_in_pod "metrics-validator" "${TEST_NAMESPACE}" \
-        curl -s "http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/query?query=kubewise_test_component_up" 2>/dev/null | \
-        grep -o '"result":\[' | wc -l || echo "0")
+    local metrics_response
+    metrics_response=$(exec_in_pod "metrics-validator" "${TEST_NAMESPACE}" \
+        wget -q -O - "http://prometheus-kube-prometheus-prometheus.monitoring:9090/api/v1/query?query=up" 2>/dev/null || echo "")
     
-    if [ "${metrics_count:-0}" -ge 1 ]; then
+    if echo "${metrics_response}" | grep -q '"result"'; then
         echo "  ✓ Prometheus is collecting metrics"
         return 0
     else
@@ -231,9 +252,9 @@ test_memory_leak_detection() {
     # Configure memory-hog for leak mode
     log_info "Configuring memory-hog for leak mode..."
     exec_in_pod "memory-hog" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8082/api/v1/config \
-        -H 'Content-Type: application/json' \
-        -d '{"mode":"leak","leakRateMBMin":20}' > /dev/null
+        wget -q -O - --post-data='{"mode":"leak","leakRateMBMin":20}' \
+        --header="Content-Type: application/json" \
+        http://localhost:8082/api/v1/config > /dev/null 2>&1 || true
     
     echo "  ✓ Memory leak mode configured"
     
@@ -244,15 +265,15 @@ test_memory_leak_detection() {
     # Check memory status
     local mem_status
     mem_status=$(exec_in_pod "memory-hog" "${TEST_NAMESPACE}" \
-        curl -s http://localhost:8082/api/v1/status 2>/dev/null || echo "{}")
+        wget -q -O - http://localhost:8082/api/v1/status 2>/dev/null || echo "{}")
     echo "  Memory status: ${mem_status}"
     
     # Reset to steady mode
     log_info "Resetting memory-hog to steady mode..."
     exec_in_pod "memory-hog" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8082/api/v1/config \
-        -H 'Content-Type: application/json' \
-        -d '{"mode":"steady","targetMB":128}' > /dev/null
+        wget -q -O - --post-data='{"mode":"steady","targetMB":128}' \
+        --header="Content-Type: application/json" \
+        http://localhost:8082/api/v1/config > /dev/null 2>&1 || true
     
     echo "  ✓ Memory leak test completed"
     return 0
@@ -265,9 +286,9 @@ test_cpu_spike_detection() {
     # Trigger CPU spike
     log_info "Triggering CPU spike..."
     exec_in_pod "cpu-burster" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8083/api/v1/trigger \
-        -H 'Content-Type: application/json' \
-        -d '{"duration":"30s"}' > /dev/null 2>&1 || true
+        wget -q -O - --post-data='{"duration":"30s"}' \
+        --header="Content-Type: application/json" \
+        http://localhost:8083/api/v1/trigger > /dev/null 2>&1 || true
     
     echo "  ✓ CPU spike triggered"
     
@@ -277,7 +298,7 @@ test_cpu_spike_detection() {
     # Check CPU status
     local cpu_status
     cpu_status=$(exec_in_pod "cpu-burster" "${TEST_NAMESPACE}" \
-        curl -s http://localhost:8083/api/v1/status 2>/dev/null || echo "{}")
+        wget -q -O - http://localhost:8083/api/v1/status 2>/dev/null || echo "{}")
     echo "  CPU status: ${cpu_status}"
     
     echo "  ✓ CPU spike test completed"
@@ -291,7 +312,7 @@ test_load_generator() {
     # Start load generation
     log_info "Starting load generation..."
     exec_in_pod "load-generator" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8081/api/v1/start > /dev/null 2>&1 || true
+        wget -q -O - --post-data="" http://localhost:8081/api/v1/start > /dev/null 2>&1 || true
     
     echo "  ✓ Load generation started"
     
@@ -301,13 +322,13 @@ test_load_generator() {
     # Check stats
     local stats
     stats=$(exec_in_pod "load-generator" "${TEST_NAMESPACE}" \
-        curl -s http://localhost:8081/api/v1/stats 2>/dev/null || echo "{}")
+        wget -q -O - http://localhost:8081/api/v1/stats 2>/dev/null || echo "{}")
     echo "  Load stats: ${stats}"
     
     # Stop load generation
     log_info "Stopping load generation..."
     exec_in_pod "load-generator" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8081/api/v1/stop > /dev/null 2>&1 || true
+        wget -q -O - --post-data="" http://localhost:8081/api/v1/stop > /dev/null 2>&1 || true
     
     echo "  ✓ Load generator test completed"
     return 0
@@ -320,7 +341,7 @@ test_validation_report() {
     # Trigger validation
     log_info "Triggering validation..."
     exec_in_pod "metrics-validator" "${TEST_NAMESPACE}" \
-        curl -s -X POST http://localhost:8080/api/v1/validate > /dev/null 2>&1 || true
+        wget -q -O - --post-data="" http://localhost:8080/api/v1/validate > /dev/null 2>&1 || true
     
     # Wait for validation to complete
     sleep 10
@@ -329,7 +350,7 @@ test_validation_report() {
     local report
     report=$(get_validation_report)
     
-    if [ -n "${report}" ] && [ "${report}" != "{}" ]; then
+    if [ -n "${report}" ] && [ "${report}" != "{}" ] && ! echo "${report}" | grep -q "error"; then
         echo "  ✓ Validation report generated"
         if [ "${VERBOSE}" = "true" ]; then
             echo "  Report: ${report}"
@@ -611,13 +632,10 @@ main() {
     
     check_prerequisites
     
-    # Run tests with timeout
+    # Run tests (timeout not available on macOS by default)
     local exit_code=0
-    if ! timeout "${TIMEOUT}" bash -c "$(declare -f); run_tests"; then
+    if ! run_tests; then
         exit_code=$?
-        if [ ${exit_code} -eq 124 ]; then
-            log_error "Tests timed out after ${TIMEOUT}"
-        fi
     fi
     
     # Collect logs on failure

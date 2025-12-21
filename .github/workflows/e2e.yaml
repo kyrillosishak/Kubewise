@@ -1,0 +1,203 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'test-app/**'
+      - 'charts/**'
+      - 'recommendation-api/**'
+      - 'resource-agent/**'
+      - '.github/workflows/e2e.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-app/**'
+      - 'charts/**'
+      - 'recommendation-api/**'
+      - 'resource-agent/**'
+      - '.github/workflows/e2e.yaml'
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Test scenario to run'
+        required: false
+        default: 'baseline'
+        type: choice
+        options:
+          - baseline
+          - stress
+          - anomaly
+          - full
+
+env:
+  CLUSTER_NAME: kubewise-test
+  TEST_NAMESPACE: kubewise-test
+  KUBEWISE_NAMESPACE: kubewise-system
+  DOCKER_REGISTRY: kubewise-test
+  GO_VERSION: '1.22'
+
+jobs:
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: test-app/go.sum
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+      - name: Install helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.0'
+
+      - name: Create kind cluster
+        working-directory: test-app
+        run: |
+          kind create cluster --name ${{ env.CLUSTER_NAME }} --config hack/kind-config.yaml --wait 120s
+          kubectl cluster-info --context kind-${{ env.CLUSTER_NAME }}
+          kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+      - name: Install metrics-server
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+          kubectl patch deployment metrics-server -n kube-system --type='json' \
+            -p='[
+              {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"},
+              {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-preferred-address-types=InternalIP"}
+            ]'
+          kubectl rollout status deployment/metrics-server -n kube-system --timeout=120s || true
+
+      - name: Install Prometheus
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+            --namespace monitoring \
+            --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+            --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+            --set alertmanager.enabled=false \
+            --set grafana.enabled=false \
+            --set kubeStateMetrics.enabled=true \
+            --set nodeExporter.enabled=true \
+            --wait \
+            --timeout 5m
+
+      - name: Build test app Docker images
+        working-directory: test-app
+        run: |
+          make docker-build VERSION=latest
+
+      - name: Load images into kind
+        run: |
+          COMPONENTS="pattern-controller load-generator memory-hog cpu-burster steady-worker metrics-validator"
+          for component in $COMPONENTS; do
+            kind load docker-image ${{ env.DOCKER_REGISTRY }}/${component}:latest --name ${{ env.CLUSTER_NAME }}
+          done
+
+      - name: Create Kubewise namespace and mock API
+        working-directory: test-app
+        run: |
+          kubectl create namespace ${{ env.KUBEWISE_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -f hack/mock-kubewise.yaml
+
+      - name: Wait for mock Kubewise API
+        run: |
+          kubectl rollout status deployment/kubewise-api -n ${{ env.KUBEWISE_NAMESPACE }} --timeout=60s
+
+      - name: Deploy test application
+        working-directory: test-app
+        run: |
+          helm upgrade --install kubewise-test charts/kubewise-test \
+            --namespace ${{ env.TEST_NAMESPACE }} \
+            --create-namespace \
+            --set patternController.enabled=true \
+            --set memoryHog.enabled=true \
+            --set cpuBurster.enabled=true \
+            --set steadyWorker.enabled=true \
+            --set loadGenerator.enabled=true \
+            --set metricsValidator.enabled=true \
+            --set metricsValidator.config.kubewiseURL="http://kubewise-api.${{ env.KUBEWISE_NAMESPACE }}:8080" \
+            --set metricsValidator.config.prometheusURL="http://prometheus-kube-prometheus-prometheus.monitoring:9090" \
+            --set serviceMonitor.enabled=true \
+            --wait \
+            --timeout 5m
+
+      - name: Wait for all pods to be ready
+        run: |
+          kubectl wait --for=condition=Ready pods --all -n ${{ env.TEST_NAMESPACE }} --timeout=180s
+
+      - name: Show pod status
+        run: |
+          echo "=== Test Application Pods ==="
+          kubectl get pods -n ${{ env.TEST_NAMESPACE }} -o wide
+          echo ""
+          echo "=== Kubewise Pods ==="
+          kubectl get pods -n ${{ env.KUBEWISE_NAMESPACE }} -o wide
+          echo ""
+          echo "=== Monitoring Pods ==="
+          kubectl get pods -n monitoring -o wide
+
+      - name: Run E2E tests
+        working-directory: test-app
+        run: |
+          SCENARIO="${{ github.event.inputs.scenario || 'baseline' }}"
+          ./hack/run-e2e-tests.sh --scenario ${SCENARIO} --verbose
+        timeout-minutes: 45
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          mkdir -p logs
+          
+          echo "=== Collecting test app logs ==="
+          for pod in $(kubectl get pods -n ${{ env.TEST_NAMESPACE }} -o name 2>/dev/null); do
+            pod_name=$(basename "${pod}")
+            echo "Collecting logs for ${pod_name}..."
+            kubectl logs -n ${{ env.TEST_NAMESPACE }} "${pod}" > "logs/${pod_name}.log" 2>&1 || true
+            kubectl logs -n ${{ env.TEST_NAMESPACE }} "${pod}" --previous > "logs/${pod_name}-previous.log" 2>&1 || true
+          done
+          
+          echo "=== Collecting Kubewise logs ==="
+          for pod in $(kubectl get pods -n ${{ env.KUBEWISE_NAMESPACE }} -o name 2>/dev/null); do
+            pod_name=$(basename "${pod}")
+            echo "Collecting logs for kubewise-${pod_name}..."
+            kubectl logs -n ${{ env.KUBEWISE_NAMESPACE }} "${pod}" > "logs/kubewise-${pod_name}.log" 2>&1 || true
+          done
+          
+          echo "=== Collecting pod descriptions ==="
+          kubectl describe pods -n ${{ env.TEST_NAMESPACE }} > logs/test-pods-describe.txt 2>&1 || true
+          kubectl describe pods -n ${{ env.KUBEWISE_NAMESPACE }} > logs/kubewise-pods-describe.txt 2>&1 || true
+          
+          echo "=== Collecting events ==="
+          kubectl get events -n ${{ env.TEST_NAMESPACE }} --sort-by='.lastTimestamp' > logs/test-events.txt 2>&1 || true
+          kubectl get events -n ${{ env.KUBEWISE_NAMESPACE }} --sort-by='.lastTimestamp' > logs/kubewise-events.txt 2>&1 || true
+
+      - name: Upload logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-logs
+          path: logs/
+          retention-days: 7
+
+      - name: Cleanup kind cluster
+        if: always()
+        run: |
+          kind delete cluster --name ${{ env.CLUSTER_NAME }} || true

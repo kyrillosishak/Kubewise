@@ -1,0 +1,12 @@
+# Test runner pod for E2E tests
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2e-test-runner
+  namespace: kubewise-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test-runner
+    image: curlimages/curl:latest
+    command: ["sleep", "3600"]

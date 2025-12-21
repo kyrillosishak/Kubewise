@@ -4,7 +4,8 @@
 
 Kubewise automatically analyzes your container workloads and provides ML-powered resource recommendations that reduce costs while preventing OOM kills and CPU throttling.
 
-[![CI](https://github.com/kyrillosishak/kubewise/actions/workflows/ci.yaml/badge.svg)](https://github.com/example/kubewise/actions/workflows/ci.yaml)
+[![CI](https://github.com/kyrillosishak/Kubewise/actions/workflows/ci.yaml/badge.svg)](https://github.com/kyrillosishak/Kubewise/actions/workflows/ci.yaml)
+[![E2E Tests](https://github.com/kyrillosishak/Kubewise/actions/workflows/e2e.yaml/badge.svg)](https://github.com/kyrillosishak/Kubewise/actions/workflows/e2e.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ## Why Kubewise?
@@ -79,7 +80,7 @@ Kubewise solves this by:
 
 ```bash
 # Add the Helm repository
-helm repo add kubewise https://example.github.io/kubewise
+helm repo add kubewise https://kyrillosishak.github.io/Kubewise
 helm repo update
 
 # Install with default settings (dry-run mode enabled)
@@ -199,7 +200,7 @@ See [docs/examples/](docs/examples/) for production-ready configurations:
 brew install kubewise/tap/kubewise-cli
 
 # Or download directly
-curl -LO https://github.com/example/kubewise/releases/latest/download/kw-darwin-amd64
+curl -LO https://github.com/kyrillosishak/Kubewise/releases/latest/download/kw-darwin-amd64
 chmod +x kw-darwin-amd64 && sudo mv kw-darwin-amd64 /usr/local/bin/kw
 
 # Usage
@@ -345,6 +346,24 @@ make deploy-local
 - [ ] Custom model training UI
 - [ ] Slack/PagerDuty integrations
 - [ ] FinOps dashboard
+
+## Test Application
+
+The [test-app](test-app/) directory contains a comprehensive test suite for validating Kubewise's ML predictions:
+
+- **Pattern Controller** - Orchestrates test scenarios
+- **Memory Hog** - Generates memory usage patterns (steady, leak, spike)
+- **CPU Burster** - Generates CPU usage patterns (steady, spike, wave, random)
+- **Load Generator** - HTTP traffic generator
+- **Metrics Validator** - Validates predictions against actual usage
+
+```bash
+# Quick start for local testing
+cd test-app
+make e2e-full  # Sets up kind cluster, deploys everything, runs tests
+```
+
+See [test-app/README.md](test-app/README.md) for detailed documentation.
 
 ## Contributing
 

@@ -1,0 +1,88 @@
+# Mock Kubewise API for E2E testing
+# This provides a minimal mock of the Kubewise API for testing purposes
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-kubewise-config
+  namespace: kubewise-system
+data:
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+    http {
+      server {
+        listen 8080;
+        
+        # Health check
+        location /healthz {
+          return 200 '{"status":"healthy"}';
+          add_header Content-Type application/json;
+        }
+        
+        # Recommendations endpoint
+        location /api/v1/recommendations {
+          return 200 '{"recommendations":[{"id":"rec-1","namespace":"kubewise-test","deployment":"steady-worker","cpu_request_millicores":100,"cpu_limit_millicores":200,"memory_request_bytes":134217728,"memory_limit_bytes":268435456,"confidence":0.85,"model_version":"v1.0","status":"active","created_at":"2025-01-01T00:00:00Z"}],"total":1}';
+          add_header Content-Type application/json;
+        }
+        
+        # Costs endpoint
+        location /api/v1/costs {
+          return 200 '{"current_monthly_cost":100.0,"recommended_monthly_cost":80.0,"potential_savings":20.0,"currency":"USD","deployment_count":6,"last_updated":"2025-01-01T00:00:00Z"}';
+          add_header Content-Type application/json;
+        }
+        
+        # Anomalies endpoint
+        location /api/v1/anomalies {
+          return 200 '{"anomalies":[],"total":0}';
+          add_header Content-Type application/json;
+        }
+        
+        # Default
+        location / {
+          return 404 '{"error":"not found"}';
+          add_header Content-Type application/json;
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubewise-api
+  namespace: kubewise-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubewise-api
+  template:
+    metadata:
+      labels:
+        app: kubewise-api
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      volumes:
+      - name: config
+        configMap:
+          name: mock-kubewise-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubewise-api
+  namespace: kubewise-system
+spec:
+  selector:
+    app: kubewise-api
+  ports:
+  - port: 8080
+    targetPort: 8080
