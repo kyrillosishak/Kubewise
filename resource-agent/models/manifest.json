@@ -2,9 +2,9 @@
   "version": "v1.0.0",
   "format": "onnx",
   "quantization": "int8",
-  "size_bytes": 6056,
-  "checksum_sha256": "8701a0063778ae4ad5518b06ad7fe8741fae89f02be108a359b1ee13eee50aef",
-  "created_at": "2025-12-21T01:57:03.609349Z",
+  "size_bytes": 228732,
+  "checksum_sha256": "515dc3a308860f711e8d3088388778e28b42edd153f62f54970520b42f9e14b7",
+  "created_at": "2025-12-21T03:36:05.293992Z",
   "input": {
     "name": "features",
     "shape": [
