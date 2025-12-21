@@ -46,7 +46,7 @@ impl Default for StreamingConfig {
 }
 
 /// Pending data to be synced
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PendingData {
     pub metrics: Vec<LocalMetrics>,
     pub predictions: Vec<LocalProfile>,
@@ -63,16 +63,6 @@ pub struct AnomalyData {
     pub severity: i32,
     pub message: String,
     pub detected_at: i64,
-}
-
-impl Default for PendingData {
-    fn default() -> Self {
-        Self {
-            metrics: Vec::new(),
-            predictions: Vec::new(),
-            anomalies: Vec::new(),
-        }
-    }
 }
 
 /// Metrics streamer for sending data to the API

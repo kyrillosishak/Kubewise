@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
     health_registry.set_ready(true).await;
 
     // Start health and metrics server
-    let api_handle = tokio::spawn(api::serve(config.api_port, app_state));
+    let _api_handle = tokio::spawn(api::serve(config.api_port, app_state));
 
     // Wait for shutdown signal
     tokio::signal::ctrl_c().await?;

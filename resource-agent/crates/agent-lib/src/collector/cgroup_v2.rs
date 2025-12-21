@@ -213,6 +213,7 @@ pub struct ContainerMetadata {
     pub pod_name: String,
     pub namespace: String,
     pub deployment: Option<String>,
+    #[allow(dead_code)]
     pub node_name: String,
 }
 

@@ -111,8 +111,10 @@ impl SyncClient {
 
     /// Create a new SyncClient with default configuration
     pub fn with_defaults(endpoint: String, agent_id: String, node_name: String) -> Self {
-        let mut config = ClientConfig::default();
-        config.endpoint = endpoint;
+        let config = ClientConfig {
+            endpoint,
+            ..Default::default()
+        };
         Self::new(config, agent_id, node_name)
     }
 

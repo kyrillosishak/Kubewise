@@ -293,6 +293,7 @@ pub struct WatcherHandle {
 /// Queries the Kubernetes API for pod/deployment labels
 pub struct K8sMetadataFetcher {
     /// Kubernetes API endpoint (typically from in-cluster config)
+    #[allow(dead_code)]
     api_endpoint: String,
     /// Service account token path
     token_path: PathBuf,

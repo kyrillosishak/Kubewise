@@ -16,14 +16,17 @@ pub struct AgentConfig {
 
     /// Recommendation API endpoint
     #[serde(default = "default_api_endpoint")]
+    #[allow(dead_code)]
     pub api_endpoint: String,
 
     /// Metrics collection interval in seconds
     #[serde(default = "default_collection_interval")]
+    #[allow(dead_code)]
     pub collection_interval_secs: u64,
 
     /// Prediction interval in seconds
     #[serde(default = "default_prediction_interval")]
+    #[allow(dead_code)]
     pub prediction_interval_secs: u64,
 }
 

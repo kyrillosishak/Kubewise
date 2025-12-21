@@ -157,7 +157,7 @@ impl Predictor for OnnxPredictor {
         let input = self.features_to_tensor(features);
 
         let result = model.run(tvec!(input.into()))?;
-        let output = result.get(0).context("No output from model")?;
+        let output = result.first().context("No output from model")?;
 
         let elapsed = start.elapsed();
         self.inference_count

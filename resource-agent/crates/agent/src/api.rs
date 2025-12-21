@@ -13,6 +13,7 @@ use tracing::info;
 #[derive(Clone)]
 pub struct AppState {
     pub health_registry: HealthRegistry,
+    #[allow(dead_code)]
     pub metrics: AgentMetrics,
 }
 

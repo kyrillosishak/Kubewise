@@ -218,11 +218,7 @@ impl Alerter {
             return None;
         }
 
-        let severity = if anomaly.projected_oom_time > 0 {
-            "Warning"
-        } else {
-            "Warning"
-        };
+        let severity = "Warning";
 
         let message =
             format!(

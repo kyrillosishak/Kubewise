@@ -203,6 +203,7 @@ impl StructuredLogger {
     }
 
     /// Log a prediction generation event
+    #[allow(clippy::too_many_arguments)]
     pub fn log_prediction(
         &self,
         container_id: &str,
@@ -303,6 +304,7 @@ impl StructuredLogger {
     }
 
     /// Log a CPU spike detection
+    #[allow(clippy::too_many_arguments)]
     pub fn log_cpu_spike(
         &self,
         container_id: &str,
@@ -329,6 +331,7 @@ impl StructuredLogger {
     }
 
     /// Log prediction deviation from actual usage
+    #[allow(clippy::too_many_arguments)]
     pub fn log_prediction_deviation(
         &self,
         container_id: &str,

@@ -101,14 +101,12 @@ impl FeatureExtractor {
     }
 
     fn extract_hour(&self, timestamp: i64) -> f32 {
-        let dt =
-            chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
+        let dt = chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(Utc::now);
         dt.hour() as f32 / 24.0
     }
 
     fn extract_day(&self, timestamp: i64) -> f32 {
-        let dt =
-            chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
+        let dt = chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(Utc::now);
         dt.weekday().num_days_from_monday() as f32 / 7.0
     }
 
@@ -214,10 +212,10 @@ mod tests {
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
         // p50 should be around 5-6 for 10 values
         let p50 = percentile(&values, 50.0);
-        assert!(p50 >= 4.0 && p50 <= 7.0, "p50 was {}", p50);
+        assert!((4.0..=7.0).contains(&p50), "p50 was {}", p50);
         // p95 should be around 9-10
         let p95 = percentile(&values, 95.0);
-        assert!(p95 >= 8.0 && p95 <= 10.0, "p95 was {}", p95);
+        assert!((8.0..=10.0).contains(&p95), "p95 was {}", p95);
     }
 
     #[test]

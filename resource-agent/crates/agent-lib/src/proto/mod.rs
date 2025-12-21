@@ -3,17 +3,7 @@
 //! This module contains the generated Rust code from protobuf definitions.
 //! The code is generated at build time by tonic-build.
 //!
-//! If protoc is not available, stub types are provided for development.
-
-#[cfg(feature = "proto-gen")]
-pub mod predictor {
-    pub mod v1 {
-        tonic::include_proto!("predictor.v1");
-    }
-}
-
-// Provide stub types when proto generation is not available
-#[cfg(not(feature = "proto-gen"))]
+//! Stub types are provided for development when protoc is not available.
 pub mod predictor {
     pub mod v1 {
         use prost::Message;
