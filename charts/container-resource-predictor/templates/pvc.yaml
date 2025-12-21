@@ -1,0 +1,18 @@
+{{- if and .Values.recommendationApi.enabled (eq .Values.modelStorage.type "local") }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "predictor.fullname" . }}-models
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.modelStorage.local.storageClass }}
+  storageClassName: {{ .Values.modelStorage.local.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.modelStorage.local.size }}
+{{- end }}

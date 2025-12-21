@@ -1,0 +1,87 @@
+suite: CRD Tests
+templates:
+  - crd.yaml
+tests:
+  - it: should create CRD
+    asserts:
+      - isKind:
+          of: CustomResourceDefinition
+      - equal:
+          path: metadata.name
+          value: resourcerecommendations.predictor.io
+
+  - it: should have correct group and names
+    asserts:
+      - equal:
+          path: spec.group
+          value: predictor.io
+      - equal:
+          path: spec.names.kind
+          value: ResourceRecommendation
+      - equal:
+          path: spec.names.plural
+          value: resourcerecommendations
+      - equal:
+          path: spec.names.singular
+          value: resourcerecommendation
+
+  - it: should have short names
+    asserts:
+      - contains:
+          path: spec.names.shortNames
+          content: rr
+      - contains:
+          path: spec.names.shortNames
+          content: resrec
+
+  - it: should be namespaced
+    asserts:
+      - equal:
+          path: spec.scope
+          value: Namespaced
+
+  - it: should have v1 version served and stored
+    asserts:
+      - equal:
+          path: spec.versions[0].name
+          value: v1
+      - equal:
+          path: spec.versions[0].served
+          value: true
+      - equal:
+          path: spec.versions[0].storage
+          value: true
+
+  - it: should have status subresource
+    asserts:
+      - isNotNull:
+          path: spec.versions[0].subresources.status
+
+  - it: should have printer columns
+    asserts:
+      - isNotNull:
+          path: spec.versions[0].additionalPrinterColumns
+      - lengthEqual:
+          path: spec.versions[0].additionalPrinterColumns
+          count: 6
+
+  - it: should have required fields in spec
+    asserts:
+      - contains:
+          path: spec.versions[0].schema.openAPIV3Schema.properties.spec.required
+          content: targetRef
+      - contains:
+          path: spec.versions[0].schema.openAPIV3Schema.properties.spec.required
+          content: recommendation
+
+  - it: should have phase enum in status
+    asserts:
+      - contains:
+          path: spec.versions[0].schema.openAPIV3Schema.properties.status.properties.phase.enum
+          content: Pending
+      - contains:
+          path: spec.versions[0].schema.openAPIV3Schema.properties.status.properties.phase.enum
+          content: Applied
+      - contains:
+          path: spec.versions[0].schema.openAPIV3Schema.properties.status.properties.phase.enum
+          content: RolledBack

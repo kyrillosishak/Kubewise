@@ -1,0 +1,55 @@
+# Azure Pricing Configuration
+# Based on East US on-demand pricing (December 2024)
+# Update these values based on your region and pricing tier
+
+costEstimation:
+  provider: azure
+  
+  # Azure-specific pricing (automatically loaded when provider is "azure")
+  azurePricing:
+    # General purpose (D-series v5)
+    # Price per vCPU-hour
+    cpuPerCoreHour: "0.048"
+    # Price per GB-hour
+    memoryPerGBHour: "0.006"
+    
+    # Compute optimized (F-series v2) - uncomment to use
+    # cpuPerCoreHour: "0.042"
+    # memoryPerGBHour: "0.005"
+    
+    # Memory optimized (E-series v5) - uncomment to use
+    # cpuPerCoreHour: "0.063"
+    # memoryPerGBHour: "0.008"
+
+---
+# Alternative: Reserved Instances (1-year)
+# Use this if you have Azure Reserved VM Instances
+
+costEstimation:
+  provider: custom
+  customPricing:
+    # 1-year RI typically offers ~35% discount
+    cpuPerCoreHour: "0.031"
+    memoryPerGBHour: "0.004"
+
+---
+# Alternative: Spot VMs
+# Use this if running on Azure Spot VMs
+
+costEstimation:
+  provider: custom
+  customPricing:
+    # Spot pricing varies but typically 60-90% cheaper
+    cpuPerCoreHour: "0.012"
+    memoryPerGBHour: "0.0015"
+
+---
+# Alternative: Azure Hybrid Benefit
+# Use this if you have existing Windows Server licenses
+
+costEstimation:
+  provider: custom
+  customPricing:
+    # Hybrid Benefit can save up to 40% on Windows VMs
+    cpuPerCoreHour: "0.029"
+    memoryPerGBHour: "0.0036"

@@ -1,0 +1,242 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: resourcerecommendations.predictor.io
+  labels:
+    {{- include "predictor.labels" . | nindent 4 }}
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+spec:
+  group: predictor.io
+  names:
+    kind: ResourceRecommendation
+    listKind: ResourceRecommendationList
+    plural: resourcerecommendations
+    singular: resourcerecommendation
+    shortNames:
+      - rr
+      - resrec
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Target
+          type: string
+          jsonPath: .spec.targetRef.name
+        - name: CPU-Req
+          type: string
+          jsonPath: .spec.recommendation.cpuRequest
+        - name: Mem-Req
+          type: string
+          jsonPath: .spec.recommendation.memoryRequest
+        - name: Confidence
+          type: number
+          jsonPath: .spec.recommendation.confidence
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: ResourceRecommendation represents a resource recommendation for a Kubernetes workload
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - targetRef
+                - recommendation
+              properties:
+                targetRef:
+                  type: object
+                  description: Reference to the target workload
+                  required:
+                    - kind
+                    - name
+                  properties:
+                    apiVersion:
+                      type: string
+                      default: apps/v1
+                    kind:
+                      type: string
+                      enum:
+                        - Deployment
+                        - StatefulSet
+                        - DaemonSet
+                        - ReplicaSet
+                    name:
+                      type: string
+                    containerName:
+                      type: string
+                      description: Optional container name if workload has multiple containers
+                recommendation:
+                  type: object
+                  description: Recommended resource values
+                  properties:
+                    cpuRequest:
+                      type: string
+                      pattern: ^(\d+m?|\d+\.\d+)$
+                      description: Recommended CPU request (e.g., "100m" or "0.5")
+                    cpuLimit:
+                      type: string
+                      pattern: ^(\d+m?|\d+\.\d+)$
+                      description: Recommended CPU limit
+                    memoryRequest:
+                      type: string
+                      pattern: ^(\d+(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?)$
+                      description: Recommended memory request (e.g., "128Mi")
+                    memoryLimit:
+                      type: string
+                      pattern: ^(\d+(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?)$
+                      description: Recommended memory limit
+                    confidence:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: Confidence score (0-1) for this recommendation
+                    modelVersion:
+                      type: string
+                      description: Version of the ML model that generated this recommendation
+                    generatedAt:
+                      type: string
+                      format: date-time
+                      description: Timestamp when recommendation was generated
+                    timeWindow:
+                      type: string
+                      enum:
+                        - peak
+                        - off-peak
+                        - weekly
+                        - all
+                      default: all
+                      description: Time window this recommendation applies to
+                costImpact:
+                  type: object
+                  description: Cost impact analysis
+                  properties:
+                    currentMonthlyCost:
+                      type: string
+                      description: Current monthly cost estimate
+                    projectedMonthlyCost:
+                      type: string
+                      description: Projected monthly cost with recommendation
+                    monthlySavings:
+                      type: string
+                      description: Estimated monthly savings
+                    currency:
+                      type: string
+                      default: USD
+                autoApply:
+                  type: boolean
+                  default: false
+                  description: Whether to automatically apply this recommendation
+                requiresApproval:
+                  type: boolean
+                  default: true
+                  description: Whether this recommendation requires manual approval
+                riskLevel:
+                  type: string
+                  enum:
+                    - low
+                    - medium
+                    - high
+                  default: low
+                  description: Risk level of applying this recommendation
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Approved
+                    - Applied
+                    - RolledBack
+                    - Failed
+                    - Rejected
+                  default: Pending
+                  description: Current phase of the recommendation
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                appliedAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp when recommendation was applied
+                appliedBy:
+                  type: string
+                  description: User or system that applied the recommendation
+                approvedAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp when recommendation was approved
+                approvedBy:
+                  type: string
+                  description: User who approved the recommendation
+                previousResources:
+                  type: object
+                  description: Previous resource values before applying recommendation
+                  properties:
+                    cpuRequest:
+                      type: string
+                    cpuLimit:
+                      type: string
+                    memoryRequest:
+                      type: string
+                    memoryLimit:
+                      type: string
+                outcome:
+                  type: object
+                  description: Outcome tracking after applying recommendation
+                  properties:
+                    oomKills:
+                      type: integer
+                      description: Number of OOM kills since applying
+                    cpuThrottleIncrease:
+                      type: number
+                      description: Percentage increase in CPU throttling
+                    observationPeriod:
+                      type: string
+                      description: Duration of outcome observation
+                    healthy:
+                      type: boolean
+                      description: Whether the workload is healthy after applying
+                lastUpdated:
+                  type: string
+                  format: date-time
+                  description: Last time the status was updated
+                message:
+                  type: string
+                  description: Human-readable message about current status
+                generatedPatch:
+                  type: string
+                  description: Generated YAML patch for applying the recommendation

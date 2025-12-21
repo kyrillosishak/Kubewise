@@ -1,0 +1,32 @@
+{{- if .Values.recommendationApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+  {{- with .Values.recommendationApi.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.recommendationApi.service.type }}
+  ports:
+    - name: rest
+      port: {{ .Values.recommendationApi.service.restPort }}
+      targetPort: rest
+      protocol: TCP
+    - name: grpc
+      port: {{ .Values.recommendationApi.service.grpcPort }}
+      targetPort: grpc
+      protocol: TCP
+    {{- if .Values.recommendationApi.metrics.enabled }}
+    - name: metrics
+      port: {{ .Values.recommendationApi.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- include "predictor.api.selectorLabels" . | nindent 4 }}
+{{- end }}

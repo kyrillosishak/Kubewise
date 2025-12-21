@@ -1,0 +1,56 @@
+[package]
+name = "crp-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CLI tool for Container Resource Predictor"
+
+[[bin]]
+name = "crp"
+path = "src/main.rs"
+
+[dependencies]
+# CLI framework
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# Async runtime
+tokio.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Time handling
+chrono.workspace = true
+
+# Table formatting
+tabled = "0.15"
+
+# Colors for terminal output
+colored = "2.1"
+
+# Kubernetes config
+kube = { version = "0.87", features = ["client", "config", "runtime"], default-features = false }
+k8s-openapi = { version = "0.20", features = ["v1_28"] }
+
+# Pin home crate to avoid edition2024 requirement
+home = "=0.5.9"
+
+# URL handling
+url = "2.5"
+
+# Home directory detection
+dirs-next = "2.0"
+
+[dev-dependencies]
+tempfile = "3.10"
+mockito = "1.2"
+tokio-test = "0.4"

@@ -1,0 +1,91 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "predictor.fullname" . }}
+  labels:
+    {{- include "predictor.labels" . | nindent 4 }}
+rules:
+  # Read pods and deployments for metrics collection
+  - apiGroups: [""]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+    verbs: ["get", "list", "watch"]
+  # Read metrics
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+  # Create events for anomaly alerts
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # Manage ResourceRecommendation CRD
+  - apiGroups: ["predictor.io"]
+    resources: ["resourcerecommendations"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["predictor.io"]
+    resources: ["resourcerecommendations/status"]
+    verbs: ["get", "update", "patch"]
+  # Read namespaces for filtering
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch"]
+  # Leader election for API
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  {{- with .Values.rbac.additionalRules }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "predictor.fullname" . }}
+  labels:
+    {{- include "predictor.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "predictor.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "predictor.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+---
+# Role for namespace-scoped operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "predictor.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.labels" . | nindent 4 }}
+rules:
+  # Read secrets for mTLS certs and database credentials
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+  # Read configmaps
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "predictor.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "predictor.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "predictor.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,60 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto" },
+      "targets": [
+        { "expr": "count(up{job=\"resource-agent\"} == 1)", "legendFormat": "Active Agents" }
+      ],
+      "title": "Active Agents",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "targets": [
+        { "expr": "sum(predictor_recommendations_total)", "legendFormat": "Total" }
+      ],
+      "title": "Total Recommendations",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "targets": [
+        { "expr": "sum(predictor_monthly_savings_dollars)", "legendFormat": "Savings" }
+      ],
+      "title": "Monthly Savings",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["kubernetes", "predictor", "resources"],
+  "templating": {
+    "list": [
+      { "name": "datasource", "type": "datasource", "query": "prometheus" },
+      { "name": "namespace", "type": "query", "query": "label_values(predictor_recommendations_total, namespace)" }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "Container Resource Predictor",
+  "uid": "container-resource-predictor"
+}

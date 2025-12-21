@@ -1,0 +1,28 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/container-resource-predictor/recommendation-api/api/proto
+plugins:
+  # Go code generation
+  - remote: buf.build/protocolbuffers/go
+    out: ../recommendation-api/api/proto
+    opt: paths=source_relative
+  
+  # Go gRPC code generation
+  - remote: buf.build/grpc/go
+    out: ../recommendation-api/api/proto
+    opt: paths=source_relative
+  
+  # Rust code generation (using prost)
+  - remote: buf.build/community/neoeinstein-prost
+    out: ../resource-agent/crates/agent-lib/src/proto
+    opt:
+      - compile_well_known_types
+  
+  # Rust tonic gRPC code generation
+  - remote: buf.build/community/neoeinstein-tonic
+    out: ../resource-agent/crates/agent-lib/src/proto
+    opt:
+      - compile_well_known_types

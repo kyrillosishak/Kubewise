@@ -1,0 +1,49 @@
+{
+  "version": "v1.0.0",
+  "format": "onnx",
+  "quantization": "int8",
+  "size_bytes": 6056,
+  "checksum_sha256": "8701a0063778ae4ad5518b06ad7fe8741fae89f02be108a359b1ee13eee50aef",
+  "created_at": "2025-12-21T01:57:03.609349Z",
+  "input": {
+    "name": "features",
+    "shape": [
+      -1,
+      12
+    ],
+    "dtype": "float32",
+    "features": [
+      "cpu_usage_p50",
+      "cpu_usage_p95",
+      "cpu_usage_p99",
+      "mem_usage_p50",
+      "mem_usage_p95",
+      "mem_usage_p99",
+      "cpu_variance",
+      "mem_trend",
+      "throttle_ratio",
+      "hour_of_day",
+      "day_of_week",
+      "workload_age_days"
+    ]
+  },
+  "output": {
+    "name": "predictions",
+    "shape": [
+      -1,
+      5
+    ],
+    "dtype": "float32",
+    "outputs": [
+      "cpu_request",
+      "cpu_limit",
+      "memory_request",
+      "memory_limit",
+      "confidence"
+    ]
+  },
+  "performance": {
+    "inference_latency_p99_ms": 0.05,
+    "target_latency_ms": 5.0
+  }
+}

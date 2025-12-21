@@ -1,0 +1,81 @@
+# Example Helm values for medium clusters (20-100 nodes)
+# Balanced configuration for typical production workloads
+
+# Resource Agent configuration
+resourceAgent:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+  
+  config:
+    collectionInterval: 10
+    predictionInterval: 300  # 5 minutes
+    bufferRetentionHours: 24
+    logLevel: info
+    logFormat: json
+  
+  mtls:
+    enabled: true
+  
+  metrics:
+    enabled: true
+
+# Recommendation API configuration
+recommendationApi:
+  enabled: true
+  replicaCount: 2
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  
+  config:
+    dryRunMode: true
+    modelUpdateSchedule: "0 2 * * *"
+  
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+
+# External database recommended
+database:
+  external: true
+  host: "timescaledb.database.svc"
+  port: 5432
+  name: "predictor"
+  user: "predictor"
+  existingSecret: "predictor-db-credentials"
+  secretKey: "password"
+
+# S3 for model storage
+modelStorage:
+  type: s3
+  s3:
+    bucket: "predictor-models"
+    region: "us-west-2"
+    existingSecret: "predictor-s3-credentials"
+
+# Cost estimation with cloud pricing
+costEstimation:
+  provider: aws

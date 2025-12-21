@@ -1,0 +1,209 @@
+syntax = "proto3";
+
+package predictor.v1;
+
+option go_package = "github.com/container-resource-predictor/recommendation-api/api/proto/predictor/v1;predictorv1";
+
+import "google/protobuf/timestamp.proto";
+
+// PredictorSync service for agent-API communication
+service PredictorSync {
+  // Register agent with the API
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  // Stream metrics from agent to API
+  rpc SyncMetrics(stream MetricsBatch) returns (SyncResponse);
+  
+  // Get model updates
+  rpc GetModelUpdate(ModelRequest) returns (ModelResponse);
+  
+  // Upload federated learning gradients
+  rpc UploadGradients(GradientsRequest) returns (GradientsResponse);
+}
+
+// Agent registration request
+message RegisterRequest {
+  string agent_id = 1;
+  string node_name = 2;
+  string kubernetes_version = 3;
+  string agent_version = 4;
+  string model_version = 5;
+}
+
+// Agent registration response
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+  AgentConfig config = 3;
+}
+
+// Agent configuration from API
+message AgentConfig {
+  int32 collection_interval_seconds = 1;
+  int32 prediction_interval_seconds = 2;
+  int32 sync_interval_seconds = 3;
+  bool anomaly_detection_enabled = 4;
+}
+
+// Batch of metrics from agent
+message MetricsBatch {
+  string agent_id = 1;
+  string node_name = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  repeated ContainerMetrics metrics = 4;
+  repeated ResourceProfile predictions = 5;
+  repeated Anomaly anomalies = 6;
+}
+
+// Container resource metrics
+message ContainerMetrics {
+  string container_id = 1;
+  string pod_name = 2;
+  string namespace = 3;
+  string deployment = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  
+  // CPU metrics
+  float cpu_usage_cores = 6;
+  uint64 cpu_throttled_periods = 7;
+  uint64 cpu_throttled_time_ns = 8;
+  
+  // Memory metrics
+  uint64 memory_usage_bytes = 9;
+  uint64 memory_working_set_bytes = 10;
+  uint64 memory_cache_bytes = 11;
+  uint64 memory_rss_bytes = 12;
+  
+  // Network metrics
+  uint64 network_rx_bytes = 13;
+  uint64 network_tx_bytes = 14;
+}
+
+// Resource profile prediction
+message ResourceProfile {
+  string container_id = 1;
+  string pod_name = 2;
+  string namespace = 3;
+  string deployment = 4;
+  
+  // Recommended resources
+  uint32 cpu_request_millicores = 5;
+  uint32 cpu_limit_millicores = 6;
+  uint64 memory_request_bytes = 7;
+  uint64 memory_limit_bytes = 8;
+  
+  // Prediction metadata
+  float confidence = 9;
+  string model_version = 10;
+  google.protobuf.Timestamp generated_at = 11;
+  
+  // Time window for recommendation
+  TimeWindow time_window = 12;
+}
+
+// Time window for recommendations
+enum TimeWindow {
+  TIME_WINDOW_UNSPECIFIED = 0;
+  TIME_WINDOW_PEAK = 1;
+  TIME_WINDOW_OFF_PEAK = 2;
+  TIME_WINDOW_WEEKLY = 3;
+}
+
+// Anomaly detection result
+message Anomaly {
+  string container_id = 1;
+  string pod_name = 2;
+  string namespace = 3;
+  
+  AnomalyType type = 4;
+  Severity severity = 5;
+  string message = 6;
+  google.protobuf.Timestamp detected_at = 7;
+  
+  // Type-specific details
+  oneof details {
+    MemoryLeakDetails memory_leak = 8;
+    CpuSpikeDetails cpu_spike = 9;
+    OomRiskDetails oom_risk = 10;
+  }
+}
+
+// Anomaly types
+enum AnomalyType {
+  ANOMALY_TYPE_UNSPECIFIED = 0;
+  ANOMALY_TYPE_MEMORY_LEAK = 1;
+  ANOMALY_TYPE_CPU_SPIKE = 2;
+  ANOMALY_TYPE_OOM_RISK = 3;
+}
+
+// Severity levels
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_WARNING = 1;
+  SEVERITY_CRITICAL = 2;
+}
+
+// Memory leak anomaly details
+message MemoryLeakDetails {
+  double slope_bytes_per_second = 1;
+  google.protobuf.Timestamp projected_oom_time = 2;
+  float confidence = 3;
+}
+
+// CPU spike anomaly details
+message CpuSpikeDetails {
+  double current_usage = 1;
+  double expected_usage = 2;
+  double z_score = 3;
+}
+
+// OOM risk anomaly details
+message OomRiskDetails {
+  int32 oom_kills_last_hour = 1;
+  uint64 recommended_memory_increase_bytes = 2;
+}
+
+// Metrics sync response
+message SyncResponse {
+  bool success = 1;
+  string message = 2;
+  int64 metrics_received = 3;
+  int64 predictions_received = 4;
+}
+
+// Model update request
+message ModelRequest {
+  string agent_id = 1;
+  string current_model_version = 2;
+}
+
+// Model update response
+message ModelResponse {
+  bool update_available = 1;
+  string new_version = 2;
+  bytes model_weights = 3;
+  string checksum = 4;
+  ModelMetadata metadata = 5;
+}
+
+// Model metadata
+message ModelMetadata {
+  string version = 1;
+  google.protobuf.Timestamp created_at = 2;
+  float validation_accuracy = 3;
+  int64 size_bytes = 4;
+}
+
+// Federated learning gradients upload
+message GradientsRequest {
+  string agent_id = 1;
+  string model_version = 2;
+  bytes gradients = 3;
+  int64 sample_count = 4;
+}
+
+// Gradients upload response
+message GradientsResponse {
+  bool success = 1;
+  string message = 2;
+}

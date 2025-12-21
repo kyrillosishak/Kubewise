@@ -1,0 +1,155 @@
+{{- if .Values.recommendationApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.recommendationApi.autoscaling.enabled }}
+  replicas: {{ .Values.recommendationApi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "predictor.api.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        {{- include "predictor.api.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.recommendationApi.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.recommendationApi.metrics.port | quote }}
+        prometheus.io/path: "/metrics"
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "predictor.serviceAccountName" . }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.recommendationApi.securityContext | nindent 8 }}
+      containers:
+        - name: recommendation-api
+          image: {{ include "predictor.api.image" . }}
+          imagePullPolicy: {{ .Values.recommendationApi.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.recommendationApi.containerSecurityContext | nindent 12 }}
+          args:
+            - --config=/etc/predictor/config.yaml
+          ports:
+            - name: rest
+              containerPort: {{ .Values.recommendationApi.service.restPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.recommendationApi.service.grpcPort }}
+              protocol: TCP
+            {{- if .Values.recommendationApi.metrics.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.recommendationApi.metrics.port }}
+              protocol: TCP
+            {{- end }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- if .Values.database.existingSecret }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.secretKey }}
+            {{- else if not .Values.database.external }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "predictor.fullname" . }}-db
+                  key: password
+            {{- end }}
+            - name: DATABASE_URL
+              value: {{ include "predictor.databaseUrl" . | quote }}
+            {{- if eq .Values.modelStorage.type "s3" }}
+            {{- if .Values.modelStorage.s3.existingSecret }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.modelStorage.s3.existingSecret }}
+                  key: {{ .Values.modelStorage.s3.accessKeyKey }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.modelStorage.s3.existingSecret }}
+                  key: {{ .Values.modelStorage.s3.secretKeyKey }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: rest
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: rest
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.recommendationApi.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/predictor
+              readOnly: true
+            {{- if .Values.recommendationApi.mtls.enabled }}
+            - name: mtls
+              mountPath: /etc/mtls
+              readOnly: true
+            {{- end }}
+            {{- if eq .Values.modelStorage.type "local" }}
+            - name: model-storage
+              mountPath: /var/lib/predictor/models
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "predictor.fullname" . }}-api-config
+        {{- if .Values.recommendationApi.mtls.enabled }}
+        - name: mtls
+          secret:
+            secretName: {{ .Values.recommendationApi.mtls.secretName }}
+        {{- end }}
+        {{- if eq .Values.modelStorage.type "local" }}
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: {{ include "predictor.fullname" . }}-models
+        {{- end }}
+      {{- with .Values.recommendationApi.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.recommendationApi.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.recommendationApi.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

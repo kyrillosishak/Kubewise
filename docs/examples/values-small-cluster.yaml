@@ -1,0 +1,56 @@
+# Example Helm values for small clusters (< 20 nodes)
+# Optimized for minimal resource usage
+
+# Resource Agent configuration
+resourceAgent:
+  enabled: true
+  resources:
+    requests:
+      cpu: 5m
+      memory: 24Mi
+    limits:
+      cpu: 50m
+      memory: 48Mi
+  
+  config:
+    # Reduce collection frequency to save resources
+    collectionInterval: 15
+    predictionInterval: 600  # 10 minutes
+    bufferRetentionHours: 12
+    logLevel: warn
+
+# Recommendation API configuration
+recommendationApi:
+  enabled: true
+  replicaCount: 1  # Single replica for small clusters
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: false  # Disable HPA for small clusters
+  
+  podDisruptionBudget:
+    enabled: false
+  
+  config:
+    dryRunMode: true
+    logLevel: info
+
+# Use local storage for models
+modelStorage:
+  type: local
+  local:
+    size: 500Mi
+
+# Simple cost estimation
+costEstimation:
+  provider: custom
+  customPricing:
+    cpuPerCoreHour: "0.05"
+    memoryPerGBHour: "0.01"

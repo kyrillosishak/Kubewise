@@ -1,0 +1,132 @@
+{{- if .Values.resourceAgent.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "predictor.fullname" . }}-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "predictor.agent.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        {{- include "predictor.agent.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.resourceAgent.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.resourceAgent.metrics.port | quote }}
+        prometheus.io/path: "/metrics"
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "predictor.serviceAccountName" . }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.resourceAgent.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.resourceAgent.securityContext | nindent 8 }}
+      containers:
+        - name: resource-agent
+          image: {{ include "predictor.agent.image" . }}
+          imagePullPolicy: {{ .Values.resourceAgent.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.resourceAgent.containerSecurityContext | nindent 12 }}
+          args:
+            - --config=/etc/predictor/config.yaml
+          ports:
+            {{- if .Values.resourceAgent.metrics.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.resourceAgent.metrics.port }}
+              protocol: TCP
+            {{- end }}
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resourceAgent.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/predictor
+              readOnly: true
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+              readOnly: true
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            {{- if .Values.resourceAgent.mtls.enabled }}
+            - name: mtls
+              mountPath: /etc/mtls
+              readOnly: true
+            {{- end }}
+            - name: buffer
+              mountPath: /var/lib/predictor
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "predictor.fullname" . }}-agent-config
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+        - name: proc
+          hostPath:
+            path: /proc
+            type: Directory
+        {{- if .Values.resourceAgent.mtls.enabled }}
+        - name: mtls
+          secret:
+            secretName: {{ .Values.resourceAgent.mtls.secretName }}
+        {{- end }}
+        - name: buffer
+          emptyDir:
+            sizeLimit: 256Mi
+      {{- with .Values.resourceAgent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.resourceAgent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

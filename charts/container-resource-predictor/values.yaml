@@ -1,0 +1,224 @@
+# Default values for container-resource-predictor
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Resource Agent (DaemonSet) configuration
+resourceAgent:
+  enabled: true
+  image:
+    repository: container-resource-predictor/resource-agent
+    tag: ""  # Defaults to appVersion
+    pullPolicy: IfNotPresent
+  
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+  
+  # Node selector for agent pods
+  nodeSelector: {}
+  
+  # Tolerations - by default tolerate all taints (Requirement 7.1)
+  tolerations:
+    - operator: Exists
+  
+  # Pod priority class
+  priorityClassName: ""
+  
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+  
+  # Container security context
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  
+  # Configuration
+  config:
+    # Metrics collection interval in seconds
+    collectionInterval: 10
+    # Prediction interval in seconds
+    predictionInterval: 300
+    # Local buffer retention hours
+    bufferRetentionHours: 24
+    # Log level: debug, info, warn, error
+    logLevel: info
+    # Log format: json, text
+    logFormat: json
+  
+  # mTLS configuration
+  mtls:
+    enabled: true
+    # Secret containing client certificates
+    secretName: resource-agent-mtls
+  
+  # Prometheus metrics
+  metrics:
+    enabled: true
+    port: 9090
+
+# Recommendation API (Deployment) configuration
+recommendationApi:
+  enabled: true
+  image:
+    repository: container-resource-predictor/recommendation-api
+    tag: ""  # Defaults to appVersion
+    pullPolicy: IfNotPresent
+  
+  # Number of replicas
+  replicaCount: 2
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Horizontal Pod Autoscaler (Requirement 7.2)
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  
+  # Node selector
+  nodeSelector: {}
+  
+  # Tolerations
+  tolerations: []
+  
+  # Affinity rules
+  affinity: {}
+  
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+  
+  # Container security context
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    restPort: 8080
+    grpcPort: 9000
+    annotations: {}
+  
+  # Ingress configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: predictor.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  
+  # Configuration
+  config:
+    # Log level
+    logLevel: info
+    # Model update schedule (cron format)
+    modelUpdateSchedule: "0 2 * * *"
+    # Dry-run mode by default
+    dryRunMode: true
+  
+  # mTLS configuration
+  mtls:
+    enabled: true
+    # Secret containing server certificates
+    secretName: recommendation-api-mtls
+  
+  # Prometheus metrics
+  metrics:
+    enabled: true
+    port: 9091
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      labels: {}
+
+# Database configuration
+database:
+  # Use external database
+  external: false
+  # Connection string (if external)
+  connectionString: ""
+  # Internal TimescaleDB settings
+  host: "timescaledb"
+  port: 5432
+  name: "predictor"
+  user: "predictor"
+  # Password from secret
+  existingSecret: ""
+  secretKey: "password"
+
+# Model storage configuration
+modelStorage:
+  # Storage type: s3, minio, local
+  type: "local"
+  # S3/MinIO settings
+  s3:
+    bucket: "predictor-models"
+    endpoint: ""
+    region: "us-east-1"
+    existingSecret: ""
+    accessKeyKey: "access-key"
+    secretKeyKey: "secret-key"
+  # Local storage (PVC)
+  local:
+    storageClass: ""
+    size: 1Gi
+
+# Cost estimation configuration
+costEstimation:
+  # Cloud provider: aws, gcp, azure, custom
+  provider: "custom"
+  # Custom pricing (per core-hour and per GB-hour)
+  customPricing:
+    cpuPerCoreHour: "0.05"
+    memoryPerGBHour: "0.01"
+
+# RBAC configuration (Requirement 7.5)
+rbac:
+  create: true
+  # Additional rules for the cluster role
+  additionalRules: []
+
+# Service account configuration
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Pod security policy (deprecated in k8s 1.25+)
+podSecurityPolicy:
+  enabled: false

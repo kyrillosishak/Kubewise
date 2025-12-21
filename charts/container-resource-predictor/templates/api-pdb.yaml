@@ -1,0 +1,14 @@
+{{- if and .Values.recommendationApi.enabled .Values.recommendationApi.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.recommendationApi.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "predictor.api.selectorLabels" . | nindent 6 }}
+{{- end }}

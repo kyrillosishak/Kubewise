@@ -1,0 +1,115 @@
+suite: Resource Agent DaemonSet Tests
+templates:
+  - agent-daemonset.yaml
+tests:
+  - it: should create a DaemonSet when enabled
+    set:
+      resourceAgent.enabled: true
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-container-resource-predictor-agent
+
+  - it: should not create DaemonSet when disabled
+    set:
+      resourceAgent.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should have correct resource limits
+    set:
+      resourceAgent.enabled: true
+      resourceAgent.resources.requests.cpu: 20m
+      resourceAgent.resources.requests.memory: 64Mi
+      resourceAgent.resources.limits.cpu: 200m
+      resourceAgent.resources.limits.memory: 128Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 20m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 64Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+
+  - it: should tolerate all taints by default
+    set:
+      resourceAgent.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            operator: Exists
+
+  - it: should mount cgroup filesystem
+    set:
+      resourceAgent.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: cgroup
+            hostPath:
+              path: /sys/fs/cgroup
+              type: Directory
+
+  - it: should mount mTLS secrets when enabled
+    set:
+      resourceAgent.enabled: true
+      resourceAgent.mtls.enabled: true
+      resourceAgent.mtls.secretName: my-mtls-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: mtls
+            secret:
+              secretName: my-mtls-secret
+
+  - it: should have health probes configured
+    set:
+      resourceAgent.enabled: true
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].livenessProbe
+      - isNotNull:
+          path: spec.template.spec.containers[0].readinessProbe
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /readyz
+
+  - it: should use custom node selector
+    set:
+      resourceAgent.enabled: true
+      resourceAgent.nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: should set security context
+    set:
+      resourceAgent.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false

@@ -1,0 +1,19 @@
+# Training data
+data/
+
+# Model artifacts (keep only versioned models in resource-agent/models/)
+models/*.pt
+models/*.onnx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+.venv/

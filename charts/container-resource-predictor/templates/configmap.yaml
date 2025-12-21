@@ -1,0 +1,80 @@
+# ConfigMap for Resource Agent
+{{- if .Values.resourceAgent.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "predictor.fullname" . }}-agent-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.agent.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    collection:
+      interval_seconds: {{ .Values.resourceAgent.config.collectionInterval }}
+    prediction:
+      interval_seconds: {{ .Values.resourceAgent.config.predictionInterval }}
+    buffer:
+      retention_hours: {{ .Values.resourceAgent.config.bufferRetentionHours }}
+    logging:
+      level: {{ .Values.resourceAgent.config.logLevel }}
+      format: {{ .Values.resourceAgent.config.logFormat }}
+    api:
+      endpoint: {{ include "predictor.fullname" . }}-api:{{ .Values.recommendationApi.service.grpcPort }}
+      {{- if .Values.resourceAgent.mtls.enabled }}
+      mtls:
+        enabled: true
+        cert_path: /etc/mtls/tls.crt
+        key_path: /etc/mtls/tls.key
+        ca_path: /etc/mtls/ca.crt
+      {{- end }}
+    metrics:
+      enabled: {{ .Values.resourceAgent.metrics.enabled }}
+      port: {{ .Values.resourceAgent.metrics.port }}
+{{- end }}
+---
+# ConfigMap for Recommendation API
+{{- if .Values.recommendationApi.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "predictor.fullname" . }}-api-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      rest_port: {{ .Values.recommendationApi.service.restPort }}
+      grpc_port: {{ .Values.recommendationApi.service.grpcPort }}
+    logging:
+      level: {{ .Values.recommendationApi.config.logLevel }}
+    model:
+      update_schedule: "{{ .Values.recommendationApi.config.modelUpdateSchedule }}"
+    safety:
+      dry_run_mode: {{ .Values.recommendationApi.config.dryRunMode }}
+    {{- if .Values.recommendationApi.mtls.enabled }}
+    mtls:
+      enabled: true
+      cert_path: /etc/mtls/tls.crt
+      key_path: /etc/mtls/tls.key
+      ca_path: /etc/mtls/ca.crt
+    {{- end }}
+    metrics:
+      enabled: {{ .Values.recommendationApi.metrics.enabled }}
+      port: {{ .Values.recommendationApi.metrics.port }}
+    cost_estimation:
+      provider: {{ .Values.costEstimation.provider }}
+      {{- if eq .Values.costEstimation.provider "custom" }}
+      custom_pricing:
+        cpu_per_core_hour: {{ .Values.costEstimation.customPricing.cpuPerCoreHour | quote }}
+        memory_per_gb_hour: {{ .Values.costEstimation.customPricing.memoryPerGBHour | quote }}
+      {{- end }}
+    model_storage:
+      type: {{ .Values.modelStorage.type }}
+      {{- if eq .Values.modelStorage.type "s3" }}
+      s3:
+        bucket: {{ .Values.modelStorage.s3.bucket }}
+        endpoint: {{ .Values.modelStorage.s3.endpoint | quote }}
+        region: {{ .Values.modelStorage.s3.region }}
+      {{- end }}
+{{- end }}

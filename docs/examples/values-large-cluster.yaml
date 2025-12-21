@@ -1,0 +1,138 @@
+# Example Helm values for large clusters (100+ nodes)
+# High-availability configuration with full features
+
+# Global settings
+global:
+  imagePullSecrets:
+    - name: registry-credentials
+
+# Resource Agent configuration
+resourceAgent:
+  enabled: true
+  
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+  
+  # High priority for agents
+  priorityClassName: system-node-critical
+  
+  config:
+    collectionInterval: 10
+    predictionInterval: 300
+    bufferRetentionHours: 48  # Extended buffer for large clusters
+    logLevel: info
+    logFormat: json
+  
+  mtls:
+    enabled: true
+    secretName: resource-agent-mtls
+  
+  metrics:
+    enabled: true
+    port: 9090
+
+# Recommendation API configuration
+recommendationApi:
+  enabled: true
+  replicaCount: 3  # Higher base replica count
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  
+  # Spread across zones
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: api
+            topologyKey: topology.kubernetes.io/zone
+  
+  config:
+    dryRunMode: false  # Production mode
+    modelUpdateSchedule: "0 2 * * *"
+    logLevel: info
+  
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - host: predictor.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: predictor-tls
+        hosts:
+          - predictor.example.com
+  
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 15s
+      labels:
+        release: prometheus
+
+# External HA database
+database:
+  external: true
+  connectionString: ""  # Use individual settings below
+  host: "timescaledb-primary.database.svc"
+  port: 5432
+  name: "predictor"
+  user: "predictor"
+  existingSecret: "predictor-db-credentials"
+  secretKey: "password"
+
+# S3 for model storage with cross-region replication
+modelStorage:
+  type: s3
+  s3:
+    bucket: "predictor-models-prod"
+    region: "us-west-2"
+    existingSecret: "predictor-s3-credentials"
+    accessKeyKey: "access-key"
+    secretKeyKey: "secret-key"
+
+# Production cost estimation
+costEstimation:
+  provider: aws
+
+# Full RBAC
+rbac:
+  create: true
+  additionalRules:
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["create", "patch"]
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/predictor-role

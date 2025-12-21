@@ -1,0 +1,42 @@
+{{- if and .Values.recommendationApi.enabled .Values.recommendationApi.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+  {{- with .Values.recommendationApi.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.recommendationApi.ingress.className }}
+  ingressClassName: {{ .Values.recommendationApi.ingress.className }}
+  {{- end }}
+  {{- if .Values.recommendationApi.ingress.tls }}
+  tls:
+    {{- range .Values.recommendationApi.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.recommendationApi.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "predictor.fullname" $ }}-api
+                port:
+                  name: rest
+          {{- end }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,147 @@
+suite: RBAC Tests
+templates:
+  - rbac.yaml
+  - serviceaccount.yaml
+tests:
+  - it: should create ServiceAccount when enabled
+    template: serviceaccount.yaml
+    set:
+      serviceAccount.create: true
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-container-resource-predictor
+
+  - it: should not create ServiceAccount when disabled
+    template: serviceaccount.yaml
+    set:
+      serviceAccount.create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should add annotations to ServiceAccount
+    template: serviceaccount.yaml
+    set:
+      serviceAccount.create: true
+      serviceAccount.annotations:
+        eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/my-role
+    asserts:
+      - equal:
+          path: metadata.annotations["eks.amazonaws.com/role-arn"]
+          value: arn:aws:iam::123456789:role/my-role
+
+  - it: should create ClusterRole when RBAC enabled
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - containsDocument:
+          kind: ClusterRole
+          apiVersion: rbac.authorization.k8s.io/v1
+
+  - it: should create ClusterRoleBinding when RBAC enabled
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - containsDocument:
+          kind: ClusterRoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1
+
+  - it: should not create RBAC resources when disabled
+    template: rbac.yaml
+    set:
+      rbac.create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should have pod read permissions
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["pods", "nodes"]
+            verbs: ["get", "list", "watch"]
+        documentIndex: 0
+
+  - it: should have event create permissions
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["events"]
+            verbs: ["create", "patch"]
+        documentIndex: 0
+
+  - it: should have CRD permissions
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: ["predictor.io"]
+            resources: ["resourcerecommendations"]
+            verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+        documentIndex: 0
+
+  - it: should have leader election permissions
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: ["coordination.k8s.io"]
+            resources: ["leases"]
+            verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+        documentIndex: 0
+
+  - it: should add additional rules when specified
+    template: rbac.yaml
+    set:
+      rbac.create: true
+      rbac.additionalRules:
+        - apiGroups: ["custom.io"]
+          resources: ["customresources"]
+          verbs: ["get", "list"]
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: ["custom.io"]
+            resources: ["customresources"]
+            verbs: ["get", "list"]
+        documentIndex: 0
+
+  - it: should create Role for namespace-scoped operations
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - containsDocument:
+          kind: Role
+          apiVersion: rbac.authorization.k8s.io/v1
+
+  - it: should create RoleBinding for namespace-scoped operations
+    template: rbac.yaml
+    set:
+      rbac.create: true
+    asserts:
+      - containsDocument:
+          kind: RoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1

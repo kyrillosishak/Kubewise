@@ -1,0 +1,44 @@
+# GCP Pricing Configuration
+# Based on us-central1 on-demand pricing (December 2024)
+# Update these values based on your region and pricing tier
+
+costEstimation:
+  provider: gcp
+  
+  # GCP-specific pricing (automatically loaded when provider is "gcp")
+  gcpPricing:
+    # General purpose (n2/e2 family)
+    # Price per vCPU-hour
+    cpuPerCoreHour: "0.035"
+    # Price per GB-hour
+    memoryPerGBHour: "0.005"
+    
+    # Compute optimized (c2 family) - uncomment to use
+    # cpuPerCoreHour: "0.042"
+    # memoryPerGBHour: "0.006"
+    
+    # Memory optimized (m2 family) - uncomment to use
+    # cpuPerCoreHour: "0.055"
+    # memoryPerGBHour: "0.009"
+
+---
+# Alternative: Committed Use Discounts (CUD)
+# Use this if you have 1-year or 3-year commitments
+
+costEstimation:
+  provider: custom
+  customPricing:
+    # 1-year CUD typically offers ~30% discount
+    cpuPerCoreHour: "0.025"
+    memoryPerGBHour: "0.0035"
+
+---
+# Alternative: Preemptible/Spot VMs
+# Use this if running on preemptible instances
+
+costEstimation:
+  provider: custom
+  customPricing:
+    # Preemptible pricing is typically 60-80% cheaper
+    cpuPerCoreHour: "0.010"
+    memoryPerGBHour: "0.0015"

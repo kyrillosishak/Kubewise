@@ -1,0 +1,134 @@
+suite: Recommendation API Deployment Tests
+templates:
+  - api-deployment.yaml
+tests:
+  - it: should create a Deployment when enabled
+    set:
+      recommendationApi.enabled: true
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-container-resource-predictor-api
+
+  - it: should not create Deployment when disabled
+    set:
+      recommendationApi.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set replica count when autoscaling disabled
+    set:
+      recommendationApi.enabled: true
+      recommendationApi.autoscaling.enabled: false
+      recommendationApi.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should not set replica count when autoscaling enabled
+    set:
+      recommendationApi.enabled: true
+      recommendationApi.autoscaling.enabled: true
+      recommendationApi.replicaCount: 3
+    asserts:
+      - isNull:
+          path: spec.replicas
+
+  - it: should have correct resource limits
+    set:
+      recommendationApi.enabled: true
+      recommendationApi.resources.requests.cpu: 200m
+      recommendationApi.resources.requests.memory: 256Mi
+      recommendationApi.resources.limits.cpu: 1000m
+      recommendationApi.resources.limits.memory: 1Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 256Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 1000m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi
+
+  - it: should expose REST and gRPC ports
+    set:
+      recommendationApi.enabled: true
+      recommendationApi.service.restPort: 8080
+      recommendationApi.service.grpcPort: 9000
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: rest
+            containerPort: 8080
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: grpc
+            containerPort: 9000
+            protocol: TCP
+
+  - it: should have health probes configured
+    set:
+      recommendationApi.enabled: true
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].livenessProbe
+      - isNotNull:
+          path: spec.template.spec.containers[0].readinessProbe
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /readyz
+
+  - it: should mount model storage PVC when local storage
+    set:
+      recommendationApi.enabled: true
+      modelStorage.type: local
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: model-storage
+            persistentVolumeClaim:
+              claimName: RELEASE-NAME-container-resource-predictor-models
+
+  - it: should set database environment variables
+    set:
+      recommendationApi.enabled: true
+      database.existingSecret: my-db-secret
+      database.secretKey: password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-db-secret
+                key: password
+
+  - it: should use custom affinity rules
+    set:
+      recommendationApi.enabled: true
+      recommendationApi.affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.affinity.podAntiAffinity

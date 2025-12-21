@@ -1,0 +1,655 @@
+openapi: 3.0.3
+info:
+  title: Container Resource Predictor API
+  description: REST API for the Smart Container Resource Predictor
+  version: 1.0.0
+  contact:
+    name: Platform Team
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: http://recommendation-api.predictor-system:8080
+    description: In-cluster
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Recommendations
+    description: Resource recommendation operations
+  - name: Costs
+    description: Cost analysis endpoints
+  - name: Models
+    description: ML model management
+  - name: Safety
+    description: Safety configuration
+  - name: Debug
+    description: Debug and troubleshooting
+
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unhealthy
+
+  /readyz:
+    get:
+      tags: [Health]
+      summary: Readiness check
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/recommendations:
+    get:
+      tags: [Recommendations]
+      summary: List all recommendations
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, applied]
+        - name: minConfidence
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationList'
+
+  /api/v1/recommendations/{namespace}:
+    get:
+      tags: [Recommendations]
+      summary: List recommendations by namespace
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationList'
+
+  /api/v1/recommendations/{namespace}/{name}:
+    get:
+      tags: [Recommendations]
+      summary: Get recommendation by deployment
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recommendation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/recommendation/{id}/apply:
+    post:
+      tags: [Recommendations]
+      summary: Apply a recommendation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyRequest'
+      responses:
+        '200':
+          description: Applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyResponse'
+        '403':
+          description: Requires approval
+        '404':
+          description: Not found
+
+  /api/v1/recommendation/{id}/approve:
+    post:
+      tags: [Recommendations]
+      summary: Approve a recommendation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRequest'
+      responses:
+        '200':
+          description: Approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveResponse'
+
+  /api/v1/recommendation/{id}/dry-run:
+    post:
+      tags: [Recommendations]
+      summary: Dry-run a recommendation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dry-run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryRunResponse'
+
+  /api/v1/costs:
+    get:
+      tags: [Costs]
+      summary: Get cluster-wide costs
+      responses:
+        '200':
+          description: Cost analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostAnalysis'
+
+  /api/v1/costs/{namespace}:
+    get:
+      tags: [Costs]
+      summary: Get namespace costs
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cost analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostAnalysis'
+
+  /api/v1/savings:
+    get:
+      tags: [Costs]
+      summary: Get savings report
+      parameters:
+        - name: since
+          in: query
+          schema:
+            type: string
+            default: "30d"
+      responses:
+        '200':
+          description: Savings report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsReport'
+
+  /api/v1/models:
+    get:
+      tags: [Models]
+      summary: List model versions
+      responses:
+        '200':
+          description: List of models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelList'
+
+  /api/v1/models/{version}:
+    get:
+      tags: [Models]
+      summary: Get model details
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Model details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+
+  /api/v1/models/rollback/{version}:
+    post:
+      tags: [Models]
+      summary: Rollback to model version
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rollback successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackResponse'
+
+  /api/v1/safety/config/{namespace}:
+    get:
+      tags: [Safety]
+      summary: Get namespace safety config
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Safety configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SafetyConfig'
+    put:
+      tags: [Safety]
+      summary: Update namespace safety config
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SafetyConfig'
+      responses:
+        '200':
+          description: Updated successfully
+
+  /api/v1/debug/predictions/{deployment}:
+    get:
+      tags: [Debug]
+      summary: Get prediction history
+      parameters:
+        - name: deployment
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          in: query
+          schema:
+            type: string
+        - name: since
+          in: query
+          schema:
+            type: string
+            default: "24h"
+      responses:
+        '200':
+          description: Prediction history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionHistory'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, ready, not_ready]
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        namespace:
+          type: string
+        deployment:
+          type: string
+        cpuRequestMillicores:
+          type: integer
+        cpuLimitMillicores:
+          type: integer
+        memoryRequestBytes:
+          type: integer
+          format: int64
+        memoryLimitBytes:
+          type: integer
+          format: int64
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        modelVersion:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, applied, rolled_back]
+        createdAt:
+          type: string
+          format: date-time
+        timeWindow:
+          type: string
+          enum: [peak, off-peak, weekly, all]
+        costImpact:
+          $ref: '#/components/schemas/CostImpact'
+
+    RecommendationList:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        total:
+          type: integer
+
+    CostImpact:
+      type: object
+      properties:
+        currentMonthlyCost:
+          type: number
+        projectedMonthlyCost:
+          type: number
+        monthlySavings:
+          type: number
+        currency:
+          type: string
+          default: USD
+
+    ApplyRequest:
+      type: object
+      properties:
+        dryRun:
+          type: boolean
+          default: false
+
+    ApplyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        yamlPatch:
+          type: string
+
+    ApproveRequest:
+      type: object
+      properties:
+        approver:
+          type: string
+        reason:
+          type: string
+
+    ApproveResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        approver:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+
+    DryRunResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        wouldApply:
+          type: boolean
+        yamlPatch:
+          type: string
+        currentResources:
+          $ref: '#/components/schemas/Resources'
+        recommendedResources:
+          $ref: '#/components/schemas/Resources'
+
+    Resources:
+      type: object
+      properties:
+        cpuRequest:
+          type: string
+        cpuLimit:
+          type: string
+        memoryRequest:
+          type: string
+        memoryLimit:
+          type: string
+
+    CostAnalysis:
+      type: object
+      properties:
+        namespace:
+          type: string
+        currentMonthlyCost:
+          type: number
+        recommendedMonthlyCost:
+          type: number
+        potentialSavings:
+          type: number
+        currency:
+          type: string
+        deploymentCount:
+          type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+
+    SavingsReport:
+      type: object
+      properties:
+        totalSavings:
+          type: number
+        currency:
+          type: string
+        period:
+          type: string
+        savingsByMonth:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              savings:
+                type: number
+        savingsByTeam:
+          type: array
+          items:
+            type: object
+            properties:
+              team:
+                type: string
+              savings:
+                type: number
+
+    Model:
+      type: object
+      properties:
+        version:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        validationAccuracy:
+          type: number
+        isActive:
+          type: boolean
+        sizeBytes:
+          type: integer
+          format: int64
+        deployedAgents:
+          type: integer
+        totalAgents:
+          type: integer
+
+    ModelList:
+      type: object
+      properties:
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+
+    RollbackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        previousVersion:
+          type: string
+        newVersion:
+          type: string
+
+    SafetyConfig:
+      type: object
+      properties:
+        namespace:
+          type: string
+        dryRunEnabled:
+          type: boolean
+        requireApproval:
+          type: boolean
+        approvalThreshold:
+          type: number
+        autoApplyEnabled:
+          type: boolean
+        autoApplyMaxRisk:
+          type: string
+          enum: [low, medium, high]
+        autoApplyMinConfidence:
+          type: number
+
+    PredictionHistory:
+      type: object
+      properties:
+        deployment:
+          type: string
+        namespace:
+          type: string
+        predictions:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              cpuRequestMillicores:
+                type: integer
+              memoryRequestBytes:
+                type: integer
+                format: int64
+              confidence:
+                type: number
+              modelVersion:
+                type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

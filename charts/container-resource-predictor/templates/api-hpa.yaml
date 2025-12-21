@@ -1,0 +1,23 @@
+{{- if and .Values.recommendationApi.enabled .Values.recommendationApi.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "predictor.fullname" . }}-api
+  minReplicas: {{ .Values.recommendationApi.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.recommendationApi.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.recommendationApi.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

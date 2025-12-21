@@ -1,0 +1,20 @@
+{{- if and .Values.recommendationApi.enabled .Values.recommendationApi.metrics.enabled .Values.recommendationApi.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "predictor.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "predictor.api.labels" . | nindent 4 }}
+    {{- with .Values.recommendationApi.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "predictor.api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.recommendationApi.metrics.serviceMonitor.interval }}
+      path: /metrics
+{{- end }}
