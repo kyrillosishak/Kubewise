@@ -6,19 +6,19 @@ option go_package = "github.com/container-resource-predictor/recommendation-api/
 
 import "google/protobuf/timestamp.proto";
 
-// PredictorSync service for agent-API communication
-service PredictorSync {
+// PredictorSyncService for agent-API communication
+service PredictorSyncService {
   // Register agent with the API
   rpc Register(RegisterRequest) returns (RegisterResponse);
   
   // Stream metrics from agent to API
-  rpc SyncMetrics(stream MetricsBatch) returns (SyncResponse);
+  rpc SyncMetrics(stream SyncMetricsRequest) returns (SyncMetricsResponse);
   
   // Get model updates
-  rpc GetModelUpdate(ModelRequest) returns (ModelResponse);
+  rpc GetModelUpdate(GetModelUpdateRequest) returns (GetModelUpdateResponse);
   
   // Upload federated learning gradients
-  rpc UploadGradients(GradientsRequest) returns (GradientsResponse);
+  rpc UploadGradients(UploadGradientsRequest) returns (UploadGradientsResponse);
 }
 
 // Agent registration request
@@ -45,8 +45,8 @@ message AgentConfig {
   bool anomaly_detection_enabled = 4;
 }
 
-// Batch of metrics from agent
-message MetricsBatch {
+// Sync metrics request (batch of metrics from agent)
+message SyncMetricsRequest {
   string agent_id = 1;
   string node_name = 2;
   google.protobuf.Timestamp timestamp = 3;
@@ -164,7 +164,7 @@ message OomRiskDetails {
 }
 
 // Metrics sync response
-message SyncResponse {
+message SyncMetricsResponse {
   bool success = 1;
   string message = 2;
   int64 metrics_received = 3;
@@ -172,13 +172,13 @@ message SyncResponse {
 }
 
 // Model update request
-message ModelRequest {
+message GetModelUpdateRequest {
   string agent_id = 1;
   string current_model_version = 2;
 }
 
 // Model update response
-message ModelResponse {
+message GetModelUpdateResponse {
   bool update_available = 1;
   string new_version = 2;
   bytes model_weights = 3;
@@ -194,8 +194,8 @@ message ModelMetadata {
   int64 size_bytes = 4;
 }
 
-// Federated learning gradients upload
-message GradientsRequest {
+// Federated learning gradients upload request
+message UploadGradientsRequest {
   string agent_id = 1;
   string model_version = 2;
   bytes gradients = 3;
@@ -203,7 +203,7 @@ message GradientsRequest {
 }
 
 // Gradients upload response
-message GradientsResponse {
+message UploadGradientsResponse {
   bool success = 1;
   string message = 2;
 }

@@ -55,7 +55,7 @@ pub mod predictor {
         }
 
         #[derive(Clone, PartialEq, Message)]
-        pub struct MetricsBatch {
+        pub struct SyncMetricsRequest {
             #[prost(string, tag = "1")]
             pub agent_id: String,
             #[prost(string, tag = "2")]
@@ -69,6 +69,9 @@ pub mod predictor {
             #[prost(message, repeated, tag = "6")]
             pub anomalies: Vec<Anomaly>,
         }
+
+        // Type alias for backward compatibility
+        pub type MetricsBatch = SyncMetricsRequest;
 
         #[derive(Clone, PartialEq, Message)]
         pub struct ContainerMetrics {
@@ -189,7 +192,7 @@ pub mod predictor {
         }
 
         #[derive(Clone, PartialEq, Message)]
-        pub struct SyncResponse {
+        pub struct SyncMetricsResponse {
             #[prost(bool, tag = "1")]
             pub success: bool,
             #[prost(string, tag = "2")]
@@ -200,16 +203,22 @@ pub mod predictor {
             pub predictions_received: i64,
         }
 
+        // Type alias for backward compatibility
+        pub type SyncResponse = SyncMetricsResponse;
+
         #[derive(Clone, PartialEq, Message)]
-        pub struct ModelRequest {
+        pub struct GetModelUpdateRequest {
             #[prost(string, tag = "1")]
             pub agent_id: String,
             #[prost(string, tag = "2")]
             pub current_model_version: String,
         }
 
+        // Type alias for backward compatibility
+        pub type ModelRequest = GetModelUpdateRequest;
+
         #[derive(Clone, PartialEq, Message)]
-        pub struct ModelResponse {
+        pub struct GetModelUpdateResponse {
             #[prost(bool, tag = "1")]
             pub update_available: bool,
             #[prost(string, tag = "2")]
@@ -221,6 +230,9 @@ pub mod predictor {
             #[prost(message, optional, tag = "5")]
             pub metadata: Option<ModelMetadata>,
         }
+
+        // Type alias for backward compatibility
+        pub type ModelResponse = GetModelUpdateResponse;
 
         #[derive(Clone, PartialEq, Message)]
         pub struct ModelMetadata {
@@ -235,7 +247,7 @@ pub mod predictor {
         }
 
         #[derive(Clone, PartialEq, Message)]
-        pub struct GradientsRequest {
+        pub struct UploadGradientsRequest {
             #[prost(string, tag = "1")]
             pub agent_id: String,
             #[prost(string, tag = "2")]
@@ -246,32 +258,38 @@ pub mod predictor {
             pub sample_count: i64,
         }
 
+        // Type alias for backward compatibility
+        pub type GradientsRequest = UploadGradientsRequest;
+
         #[derive(Clone, PartialEq, Message)]
-        pub struct GradientsResponse {
+        pub struct UploadGradientsResponse {
             #[prost(bool, tag = "1")]
             pub success: bool,
             #[prost(string, tag = "2")]
             pub message: String,
         }
 
-        pub mod predictor_sync_client {
+        // Type alias for backward compatibility
+        pub type GradientsResponse = UploadGradientsResponse;
+
+        pub mod predictor_sync_service_client {
             use super::*;
             use tonic::codegen::*;
             use tonic::transport::Uri;
 
             #[derive(Debug, Clone)]
-            pub struct PredictorSyncClient<T> {
+            pub struct PredictorSyncServiceClient<T> {
                 inner: tonic::client::Grpc<T>,
             }
 
-            impl PredictorSyncClient<tonic::transport::Channel> {
+            impl PredictorSyncServiceClient<tonic::transport::Channel> {
                 pub fn new(channel: tonic::transport::Channel) -> Self {
                     let inner = tonic::client::Grpc::new(channel);
                     Self { inner }
                 }
             }
 
-            impl<T> PredictorSyncClient<T>
+            impl<T> PredictorSyncServiceClient<T>
             where
                 T: tonic::client::GrpcService<tonic::body::BoxBody>,
                 T::Error: Into<StdError>,
@@ -286,7 +304,7 @@ pub mod predictor {
                 pub fn with_interceptor<F>(
                     inner: T,
                     interceptor: F,
-                ) -> PredictorSyncClient<InterceptedService<T, F>>
+                ) -> PredictorSyncServiceClient<InterceptedService<T, F>>
                 where
                     F: tonic::service::Interceptor,
                     T::ResponseBody: Default,
@@ -301,7 +319,7 @@ pub mod predictor {
                 {
                     let inner = InterceptedService::new(inner, interceptor);
                     let inner = tonic::client::Grpc::new(inner);
-                    PredictorSyncClient { inner }
+                    PredictorSyncServiceClient { inner }
                 }
 
                 pub async fn register(
@@ -316,14 +334,14 @@ pub mod predictor {
                     })?;
                     let codec = tonic::codec::ProstCodec::default();
                     let path =
-                        http::uri::PathAndQuery::from_static("/predictor.v1.PredictorSync/Register");
+                        http::uri::PathAndQuery::from_static("/predictor.v1.PredictorSyncService/Register");
                     self.inner.unary(request.into_request(), path, codec).await
                 }
 
                 pub async fn sync_metrics(
                     &mut self,
-                    request: impl tonic::IntoStreamingRequest<Message = MetricsBatch>,
-                ) -> Result<tonic::Response<SyncResponse>, tonic::Status> {
+                    request: impl tonic::IntoStreamingRequest<Message = SyncMetricsRequest>,
+                ) -> Result<tonic::Response<SyncMetricsResponse>, tonic::Status> {
                     self.inner.ready().await.map_err(|e| {
                         tonic::Status::new(
                             tonic::Code::Unknown,
@@ -332,7 +350,7 @@ pub mod predictor {
                     })?;
                     let codec = tonic::codec::ProstCodec::default();
                     let path = http::uri::PathAndQuery::from_static(
-                        "/predictor.v1.PredictorSync/SyncMetrics",
+                        "/predictor.v1.PredictorSyncService/SyncMetrics",
                     );
                     self.inner
                         .client_streaming(request.into_streaming_request(), path, codec)
@@ -341,8 +359,8 @@ pub mod predictor {
 
                 pub async fn get_model_update(
                     &mut self,
-                    request: impl tonic::IntoRequest<ModelRequest>,
-                ) -> Result<tonic::Response<ModelResponse>, tonic::Status> {
+                    request: impl tonic::IntoRequest<GetModelUpdateRequest>,
+                ) -> Result<tonic::Response<GetModelUpdateResponse>, tonic::Status> {
                     self.inner.ready().await.map_err(|e| {
                         tonic::Status::new(
                             tonic::Code::Unknown,
@@ -351,15 +369,15 @@ pub mod predictor {
                     })?;
                     let codec = tonic::codec::ProstCodec::default();
                     let path = http::uri::PathAndQuery::from_static(
-                        "/predictor.v1.PredictorSync/GetModelUpdate",
+                        "/predictor.v1.PredictorSyncService/GetModelUpdate",
                     );
                     self.inner.unary(request.into_request(), path, codec).await
                 }
 
                 pub async fn upload_gradients(
                     &mut self,
-                    request: impl tonic::IntoRequest<GradientsRequest>,
-                ) -> Result<tonic::Response<GradientsResponse>, tonic::Status> {
+                    request: impl tonic::IntoRequest<UploadGradientsRequest>,
+                ) -> Result<tonic::Response<UploadGradientsResponse>, tonic::Status> {
                     self.inner.ready().await.map_err(|e| {
                         tonic::Status::new(
                             tonic::Code::Unknown,
@@ -368,14 +386,21 @@ pub mod predictor {
                     })?;
                     let codec = tonic::codec::ProstCodec::default();
                     let path = http::uri::PathAndQuery::from_static(
-                        "/predictor.v1.PredictorSync/UploadGradients",
+                        "/predictor.v1.PredictorSyncService/UploadGradients",
                     );
                     self.inner.unary(request.into_request(), path, codec).await
                 }
             }
         }
+
+        // Backward compatibility alias
+        pub mod predictor_sync_client {
+            pub use super::predictor_sync_service_client::PredictorSyncServiceClient as PredictorSyncClient;
+        }
     }
 }
 
+pub use predictor::v1::predictor_sync_service_client::PredictorSyncServiceClient;
+// Backward compatibility alias
 pub use predictor::v1::predictor_sync_client::PredictorSyncClient;
 pub use predictor::v1::*;
