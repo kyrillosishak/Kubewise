@@ -147,11 +147,17 @@ Central service that:
 
 ### ML Model (Python)
 
-LSTM-based model that predicts:
+LSTM-based neural network (~35,000 parameters) that predicts:
 - CPU request/limit recommendations
 - Memory request/limit recommendations
 - Confidence scores
 - Time-window specific predictions
+
+The LSTM architecture captures temporal patterns in workload data:
+- 2-layer LSTM with 64 hidden units
+- Processes sequences of 10 timesteps (5 hours of data at 30-min intervals)
+- Learns autocorrelation and trends in resource usage
+- Exported to ONNX with int8 quantization for edge inference (<10ms)
 
 ## Configuration
 
