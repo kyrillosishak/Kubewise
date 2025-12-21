@@ -57,7 +57,7 @@ jobs:
 
       - name: Install kind
         run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64
           chmod +x ./kind
           sudo mv ./kind /usr/local/bin/kind
 
@@ -69,9 +69,9 @@ jobs:
       - name: Create kind cluster
         working-directory: test-app
         run: |
-          kind create cluster --name ${{ env.CLUSTER_NAME }} --config hack/kind-config.yaml --wait 120s
+          kind create cluster --name ${{ env.CLUSTER_NAME }} --config hack/kind-config-ci.yaml --wait 300s
           kubectl cluster-info --context kind-${{ env.CLUSTER_NAME }}
-          kubectl wait --for=condition=Ready nodes --all --timeout=120s
+          kubectl wait --for=condition=Ready nodes --all --timeout=180s
 
       - name: Install metrics-server
         run: |
