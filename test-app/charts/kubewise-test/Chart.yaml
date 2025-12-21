@@ -1,0 +1,17 @@
+apiVersion: v2
+name: kubewise-test
+description: A Helm chart for deploying the Kubewise Test Application - a multi-component system for validating Kubewise ML-powered resource predictions
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - kubewise
+  - testing
+  - kubernetes
+  - resource-prediction
+  - validation
+maintainers:
+  - name: Kubewise Team
+home: https://github.com/kubewise/kubewise
+sources:
+  - https://github.com/kubewise/kubewise

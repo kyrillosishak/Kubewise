@@ -1,0 +1,47 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kubewise-test
+  namespace: {{ include "kubewise-test.namespace" . }}
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      component: test-app
+  namespaceSelector:
+    matchNames:
+      - {{ include "kubewise-test.namespace" . }}
+  endpoints:
+    - port: http
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kubewise-test-validator
+  namespace: {{ include "kubewise-test.namespace" . }}
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: metrics-validator
+  namespaceSelector:
+    matchNames:
+      - {{ include "kubewise-test.namespace" . }}
+  endpoints:
+    - port: http
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+{{- end }}

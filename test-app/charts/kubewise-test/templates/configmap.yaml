@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-validator-config
+  namespace: {{ include "kubewise-test.namespace" . }}
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+    app: metrics-validator
+data:
+  webhook_url: {{ .Values.metricsValidator.config.webhookURL | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubewise-test-scenarios
+  namespace: {{ include "kubewise-test.namespace" . }}
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+data:
+  default_scenario: {{ .Values.scenarios.default | quote }}
+  available_scenarios: {{ .Values.scenarios.available | join "," | quote }}

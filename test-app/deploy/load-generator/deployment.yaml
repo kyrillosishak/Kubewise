@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+  namespace: kubewise-test
+  labels:
+    app: load-generator
+    component: test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+        component: test-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: load-generator
+          image: kubewise-test/load-generator:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "8081"
+            - name: MODE
+              value: "constant"
+            - name: TARGET_URL
+              value: "http://steady-worker:8080/work"
+            - name: RPS
+              value: "10"
+            - name: RAMP_START_RPS
+              value: "10"
+            - name: RAMP_END_RPS
+              value: "100"
+            - name: RAMP_DURATION
+              value: "10m"
+            - name: BURST_RPS
+              value: "100"
+            - name: BURST_INTERVAL
+              value: "5m"
+            - name: BURST_DURATION
+              value: "30s"
+            - name: PAYLOAD_SIZE_KB
+              value: "1"
+            - name: TIMEOUT
+              value: "10s"
+            - name: CONCURRENCY
+              value: "50"
+            - name: AUTO_START
+              value: "false"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3

@@ -1,0 +1,50 @@
+{{- if .Values.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "kubewise-test.serviceAccountName" . }}
+  namespace: {{ include "kubewise-test.namespace" . }}
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- if .Values.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kubewise-test.fullname" . }}-metrics-validator
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+rules:
+  # Read access to pods, services, endpoints for metrics collection
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  # Read access to deployments and replicasets for workload info
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+  # Read access to Kubewise CRDs if they exist
+  - apiGroups: ["kubewise.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kubewise-test.fullname" . }}-metrics-validator
+  labels:
+    {{- include "kubewise-test.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kubewise-test.fullname" . }}-metrics-validator
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kubewise-test.serviceAccountName" . }}
+    namespace: {{ include "kubewise-test.namespace" . }}
+{{- end }}

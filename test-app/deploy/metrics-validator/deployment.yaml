@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-validator
+  namespace: kubewise-test
+  labels:
+    app: metrics-validator
+    component: validator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-validator
+  template:
+    metadata:
+      labels:
+        app: metrics-validator
+        component: validator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: metrics-validator
+      containers:
+        - name: metrics-validator
+          image: kubewise-test/metrics-validator:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "8080"
+            - name: KUBEWISE_URL
+              value: "http://kubewise-api.kubewise-system:8080"
+            - name: PROMETHEUS_URL
+              value: "http://prometheus-server.monitoring:9090"
+            - name: TARGET_NAMESPACE
+              value: "kubewise-test"
+            - name: VALIDATION_INTERVAL
+              value: "5m"
+            - name: DATA_DIR
+              value: "/data"
+            - name: WEBHOOK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: metrics-validator-config
+                  key: webhook_url
+                  optional: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-validator
+  namespace: kubewise-test
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metrics-validator
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-validator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: metrics-validator
+subjects:
+  - kind: ServiceAccount
+    name: metrics-validator
+    namespace: kubewise-test
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-validator
+  namespace: kubewise-test
+  labels:
+    app: metrics-validator
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: metrics-validator
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-validator-config
+  namespace: kubewise-test
+data:
+  webhook_url: ""

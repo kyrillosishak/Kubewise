@@ -1,0 +1,56 @@
+Kubewise Test Application has been deployed!
+
+Namespace: {{ include "kubewise-test.namespace" . }}
+
+Components deployed:
+{{- if .Values.patternController.enabled }}
+  - Pattern Controller (orchestrates test scenarios)
+{{- end }}
+{{- if .Values.memoryHog.enabled }}
+  - Memory Hog (generates memory usage patterns)
+{{- end }}
+{{- if .Values.cpuBurster.enabled }}
+  - CPU Burster (generates CPU usage patterns)
+{{- end }}
+{{- if .Values.steadyWorker.enabled }}
+  - Steady Worker (predictable baseline workload)
+{{- end }}
+{{- if .Values.loadGenerator.enabled }}
+  - Load Generator (HTTP traffic generator)
+{{- end }}
+{{- if .Values.metricsValidator.enabled }}
+  - Metrics Validator (validates Kubewise predictions)
+{{- end }}
+
+To access the Pattern Controller API:
+  kubectl port-forward -n {{ include "kubewise-test.namespace" . }} svc/pattern-controller-svc {{ .Values.patternController.service.port }}:{{ .Values.patternController.service.port }}
+
+Then access the API at: http://localhost:{{ .Values.patternController.service.port }}
+
+Available test scenarios:
+{{- range .Values.scenarios.available }}
+  - {{ . }}
+{{- end }}
+
+To start a test scenario:
+  curl -X POST http://localhost:{{ .Values.patternController.service.port }}/api/v1/scenarios/start \
+    -H "Content-Type: application/json" \
+    -d '{"name": "{{ .Values.scenarios.default }}"}'
+
+To check scenario status:
+  curl http://localhost:{{ .Values.patternController.service.port }}/api/v1/scenarios/status
+
+{{- if .Values.metricsValidator.enabled }}
+
+To access validation reports:
+  kubectl port-forward -n {{ include "kubewise-test.namespace" . }} svc/metrics-validator {{ .Values.metricsValidator.service.port }}:{{ .Values.metricsValidator.service.port }}
+  curl http://localhost:{{ .Values.metricsValidator.service.port }}/api/v1/reports/summary
+{{- end }}
+
+{{- if .Values.serviceMonitor.enabled }}
+
+Prometheus ServiceMonitor is enabled. Metrics will be scraped automatically.
+{{- end }}
+
+For more information, see the documentation at:
+  https://github.com/kubewise/kubewise/tree/main/test-app

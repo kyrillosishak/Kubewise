@@ -1,0 +1,60 @@
+# Kind cluster configuration for Kubewise testing
+# Creates a cluster with 2 worker nodes and cgroup mounts for resource monitoring
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kubewise-test
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # HTTP ingress
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      # HTTPS ingress
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+      # NodePort range for services
+      - containerPort: 30000
+        hostPort: 30000
+        protocol: TCP
+      - containerPort: 30001
+        hostPort: 30001
+        protocol: TCP
+  - role: worker
+    extraMounts:
+      # Mount cgroup filesystem for resource monitoring
+      - hostPath: /sys/fs/cgroup
+        containerPath: /sys/fs/cgroup
+        readOnly: true
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kubewise.io/workload=test"
+  - role: worker
+    extraMounts:
+      # Mount cgroup filesystem for resource monitoring
+      - hostPath: /sys/fs/cgroup
+        containerPath: /sys/fs/cgroup
+        readOnly: true
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "kubewise.io/workload=test"
+networking:
+  # Use default CNI
+  disableDefaultCNI: false
+  # Pod subnet
+  podSubnet: "10.244.0.0/16"
+  # Service subnet
+  serviceSubnet: "10.96.0.0/12"

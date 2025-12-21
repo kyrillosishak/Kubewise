@@ -1,0 +1,223 @@
+# Default values for kubewise-test
+# This is a YAML-formatted file.
+
+# Namespace configuration
+namespace: kubewise-test
+createNamespace: true
+
+# Global image settings
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+# Pattern Controller - Central orchestrator for test scenarios
+patternController:
+  enabled: true
+  image:
+    repository: kubewise-test/pattern-controller
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  config:
+    timeAcceleration: "1.0"
+    clientTimeout: "10s"
+  service:
+    type: ClusterIP
+    port: 8080
+
+# Memory Hog - Generates configurable memory usage patterns
+memoryHog:
+  enabled: true
+  image:
+    repository: kubewise-test/memory-hog
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8082
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  config:
+    mode: "steady"
+    targetMB: "256"
+    leakRateMBMin: "10"
+    spikeSizeMB: "128"
+    spikeInterval: "5m"
+    spikeDuration: "30s"
+    containerLimitMB: "512"
+  service:
+    type: ClusterIP
+    port: 8082
+
+
+# CPU Burster - Generates configurable CPU usage patterns
+cpuBurster:
+  enabled: true
+  image:
+    repository: kubewise-test/cpu-burster
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8083
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: "2"
+      memory: 256Mi
+  config:
+    mode: "steady"
+    targetPercent: "30"
+    spikePercent: "90"
+    spikeInterval: "5m"
+    spikeDuration: "30s"
+    wavePeriod: "10m"
+    waveMin: "10"
+    waveMax: "80"
+    workers: "0"
+  service:
+    type: ClusterIP
+    port: 8083
+
+# Steady Worker - HTTP service with predictable resource usage
+steadyWorker:
+  enabled: true
+  image:
+    repository: kubewise-test/steady-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8084
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 256Mi
+  config:
+    cpuWorkMs: "10"
+    memoryAllocKB: "64"
+    memoryHoldMs: "50"
+    responseDelayMs: "0"
+    baseMemoryMB: "64"
+  service:
+    type: ClusterIP
+    port: 8084
+
+# Load Generator - HTTP traffic generator with configurable patterns
+loadGenerator:
+  enabled: true
+  image:
+    repository: kubewise-test/load-generator
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8081
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  config:
+    mode: "constant"
+    targetURL: "http://steady-worker-svc:8084/work"
+    rps: "10"
+    rampStartRPS: "10"
+    rampEndRPS: "100"
+    rampDuration: "10m"
+    burstRPS: "100"
+    burstInterval: "5m"
+    burstDuration: "30s"
+    payloadSizeKB: "1"
+    timeout: "10s"
+    concurrency: "50"
+    autoStart: "false"
+  service:
+    type: ClusterIP
+    port: 8081
+
+# Metrics Validator - Validates Kubewise predictions against actual usage
+metricsValidator:
+  enabled: true
+  image:
+    repository: kubewise-test/metrics-validator
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  config:
+    kubewiseURL: "http://kubewise-api.kubewise-system:8080"
+    prometheusURL: "http://prometheus-server.monitoring:9090"
+    targetNamespace: "kubewise-test"
+    validationInterval: "5m"
+    dataDir: "/data"
+    webhookURL: ""
+  service:
+    type: ClusterIP
+    port: 8080
+  persistence:
+    enabled: false
+    size: 1Gi
+    storageClass: ""
+
+# ServiceAccount and RBAC
+serviceAccount:
+  create: true
+  name: metrics-validator
+  annotations: {}
+
+rbac:
+  create: true
+
+# Prometheus ServiceMonitor
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+# Predefined test scenarios
+scenarios:
+  default: baseline
+  available:
+    - baseline
+    - stress
+    - anomaly
+    - full-validation
+
+# Pod annotations for all components
+podAnnotations:
+  prometheus.io/scrape: "true"
+
+# Node selector for all components
+nodeSelector: {}
+
+# Tolerations for all components
+tolerations: []
+
+# Affinity rules for all components
+affinity: {}

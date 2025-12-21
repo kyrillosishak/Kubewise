@@ -1,0 +1,74 @@
+# Services for all test-app components
+# These services enable communication between components
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: memory-hog-svc
+  namespace: kubewise-test
+  labels:
+    app: memory-hog
+    component: test-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8082
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: memory-hog
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpu-burster-svc
+  namespace: kubewise-test
+  labels:
+    app: cpu-burster
+    component: test-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8083
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: cpu-burster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: load-generator-svc
+  namespace: kubewise-test
+  labels:
+    app: load-generator
+    component: test-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: load-generator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: steady-worker-svc
+  namespace: kubewise-test
+  labels:
+    app: steady-worker
+    component: test-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8084
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: steady-worker
