@@ -12,23 +12,23 @@ import (
 
 // DryRunResult contains the result of a dry-run evaluation
 type DryRunResult struct {
-	RecommendationID string            `json:"recommendation_id"`
-	Namespace        string            `json:"namespace"`
-	Deployment       string            `json:"deployment"`
-	WouldApply       bool              `json:"would_apply"`
-	Changes          []ResourceChange  `json:"changes"`
-	Warnings         []string          `json:"warnings,omitempty"`
-	YamlPatch        string            `json:"yaml_patch"`
-	EvaluatedAt      time.Time         `json:"evaluated_at"`
+	RecommendationID string           `json:"recommendation_id"`
+	Namespace        string           `json:"namespace"`
+	Deployment       string           `json:"deployment"`
+	WouldApply       bool             `json:"would_apply"`
+	Changes          []ResourceChange `json:"changes"`
+	Warnings         []string         `json:"warnings,omitempty"`
+	YamlPatch        string           `json:"yaml_patch"`
+	EvaluatedAt      time.Time        `json:"evaluated_at"`
 }
 
 // ResourceChange describes a single resource change
 type ResourceChange struct {
-	Resource     string `json:"resource"`      // cpu_request, cpu_limit, memory_request, memory_limit
-	CurrentValue string `json:"current_value"`
-	NewValue     string `json:"new_value"`
+	Resource      string  `json:"resource"` // cpu_request, cpu_limit, memory_request, memory_limit
+	CurrentValue  string  `json:"current_value"`
+	NewValue      string  `json:"new_value"`
 	ChangePercent float64 `json:"change_percent"`
-	IsReduction  bool   `json:"is_reduction"`
+	IsReduction   bool    `json:"is_reduction"`
 }
 
 // DryRunService handles dry-run mode operations

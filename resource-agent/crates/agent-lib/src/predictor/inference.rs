@@ -9,8 +9,8 @@ use crate::models::{FeatureVector, ResourceProfile};
 use anyhow::{Context, Result};
 use std::sync::RwLock;
 use std::time::Instant;
-use tract_onnx::prelude::*;
 use tracing::{debug, warn};
+use tract_onnx::prelude::*;
 
 /// Number of input features expected by the model
 const NUM_FEATURES: usize = 12;
@@ -97,7 +97,11 @@ impl OnnxPredictor {
         let values: Vec<f32> = output_view.iter().copied().collect();
 
         if values.len() < NUM_OUTPUTS {
-            anyhow::bail!("Model output has {} values, expected {}", values.len(), NUM_OUTPUTS);
+            anyhow::bail!(
+                "Model output has {} values, expected {}",
+                values.len(),
+                NUM_OUTPUTS
+            );
         }
 
         // Use OutputFormatter to apply memory buffer and format output
@@ -108,8 +112,12 @@ impl OnnxPredictor {
     /// Get inference statistics
     pub fn stats(&self) -> InferenceStats {
         InferenceStats {
-            total_inferences: self.inference_count.load(std::sync::atomic::Ordering::Relaxed),
-            slow_inferences: self.slow_inference_count.load(std::sync::atomic::Ordering::Relaxed),
+            total_inferences: self
+                .inference_count
+                .load(std::sync::atomic::Ordering::Relaxed),
+            slow_inferences: self
+                .slow_inference_count
+                .load(std::sync::atomic::Ordering::Relaxed),
         }
     }
 
@@ -128,8 +136,11 @@ impl Predictor for OnnxPredictor {
     fn predict(&self, features: &FeatureVector) -> Result<ResourceProfile> {
         let start = Instant::now();
 
-        let model_guard = self.model.read().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
-        
+        let model_guard = self
+            .model
+            .read()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+
         // If no model loaded, use fallback
         let model = match model_guard.as_ref() {
             Some(m) => m,
@@ -139,18 +150,26 @@ impl Predictor for OnnxPredictor {
             }
         };
 
-        let version = self.model_version.read().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let version = self
+            .model_version
+            .read()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
         let input = self.features_to_tensor(features);
 
         let result = model.run(tvec!(input.into()))?;
         let output = result.get(0).context("No output from model")?;
 
         let elapsed = start.elapsed();
-        self.inference_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.inference_count
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         if elapsed.as_millis() > MAX_INFERENCE_MS {
-            self.slow_inference_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            warn!(elapsed_ms = elapsed.as_millis(), "Inference exceeded {}ms target", MAX_INFERENCE_MS);
+            self.slow_inference_count
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            warn!(
+                elapsed_ms = elapsed.as_millis(),
+                "Inference exceeded {}ms target", MAX_INFERENCE_MS
+            );
         } else {
             debug!(elapsed_us = elapsed.as_micros(), "Inference completed");
         }
@@ -160,8 +179,14 @@ impl Predictor for OnnxPredictor {
 
     fn update_model(&mut self, weights: &[u8]) -> Result<()> {
         let new_model = Self::load_model(weights)?;
-        let mut model = self.model.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
-        let mut version = self.model_version.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut model = self
+            .model
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut version = self
+            .model_version
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         *model = Some(new_model);
         // Increment version - in production this would come from model metadata
@@ -195,16 +220,16 @@ impl FallbackPredictor {
     /// Generate a simple heuristic-based prediction with 20% memory buffer
     pub fn predict(features: &FeatureVector) -> ResourceProfile {
         let formatter = OutputFormatter::new();
-        
+
         // Use p95 values for limits, p50 for requests
         let raw_outputs: [f32; 5] = [
-            features.cpu_usage_p50,           // cpu_request
-            features.cpu_usage_p95 * 1.2,     // cpu_limit with margin
-            features.mem_usage_p50,           // mem_request
-            features.mem_usage_p95,           // mem_limit (buffer applied by formatter)
-            0.5,                              // Low confidence for heuristic
+            features.cpu_usage_p50,       // cpu_request
+            features.cpu_usage_p95 * 1.2, // cpu_limit with margin
+            features.mem_usage_p50,       // mem_request
+            features.mem_usage_p95,       // mem_limit (buffer applied by formatter)
+            0.5,                          // Low confidence for heuristic
         ];
-        
+
         let mut profile = formatter.format(&raw_outputs, "fallback");
         profile.model_version = "fallback".to_string();
         profile

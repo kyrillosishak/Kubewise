@@ -333,8 +333,9 @@ pub mod predictor {
                         )
                     })?;
                     let codec = tonic::codec::ProstCodec::default();
-                    let path =
-                        http::uri::PathAndQuery::from_static("/predictor.v1.PredictorSyncService/Register");
+                    let path = http::uri::PathAndQuery::from_static(
+                        "/predictor.v1.PredictorSyncService/Register",
+                    );
                     self.inner.unary(request.into_request(), path, codec).await
                 }
 
@@ -360,7 +361,8 @@ pub mod predictor {
                 pub async fn get_model_update(
                     &mut self,
                     request: impl tonic::IntoRequest<GetModelUpdateRequest>,
-                ) -> Result<tonic::Response<GetModelUpdateResponse>, tonic::Status> {
+                ) -> Result<tonic::Response<GetModelUpdateResponse>, tonic::Status>
+                {
                     self.inner.ready().await.map_err(|e| {
                         tonic::Status::new(
                             tonic::Code::Unknown,
@@ -377,7 +379,8 @@ pub mod predictor {
                 pub async fn upload_gradients(
                     &mut self,
                     request: impl tonic::IntoRequest<UploadGradientsRequest>,
-                ) -> Result<tonic::Response<UploadGradientsResponse>, tonic::Status> {
+                ) -> Result<tonic::Response<UploadGradientsResponse>, tonic::Status>
+                {
                     self.inner.ready().await.map_err(|e| {
                         tonic::Status::new(
                             tonic::Code::Unknown,

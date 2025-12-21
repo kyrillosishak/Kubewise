@@ -73,7 +73,7 @@ impl HealthResponse {
     /// Compute overall status from component statuses
     pub fn compute_status(components: &HashMap<String, ComponentHealth>) -> ComponentStatus {
         let mut has_degraded = false;
-        
+
         for health in components.values() {
             match health.status {
                 ComponentStatus::Unhealthy => return ComponentStatus::Unhealthy,
@@ -81,7 +81,7 @@ impl HealthResponse {
                 ComponentStatus::Healthy => {}
             }
         }
-        
+
         if has_degraded {
             ComponentStatus::Degraded
         } else {
@@ -171,10 +171,10 @@ impl HealthRegistry {
     pub async fn readiness(&self) -> ReadinessResponse {
         let ready = *self.ready.read().await;
         let health = self.health().await;
-        
+
         // Not ready if any critical component is unhealthy
         let critical_healthy = health.status != ComponentStatus::Unhealthy;
-        
+
         if !ready {
             ReadinessResponse {
                 ready: false,
@@ -202,7 +202,7 @@ mod tests {
     async fn test_health_registry_initial_state() {
         let registry = HealthRegistry::new();
         let health = registry.health().await;
-        
+
         assert_eq!(health.status, ComponentStatus::Healthy);
         assert!(health.components.is_empty());
     }
@@ -211,7 +211,7 @@ mod tests {
     async fn test_health_registry_component_registration() {
         let registry = HealthRegistry::new();
         registry.register(components::COLLECTOR).await;
-        
+
         let health = registry.health().await;
         assert!(health.components.contains_key(components::COLLECTOR));
         assert_eq!(
@@ -225,9 +225,11 @@ mod tests {
         let registry = HealthRegistry::new();
         registry.register(components::COLLECTOR).await;
         registry.register(components::PREDICTOR).await;
-        
-        registry.set_degraded(components::COLLECTOR, "High latency").await;
-        
+
+        registry
+            .set_degraded(components::COLLECTOR, "High latency")
+            .await;
+
         let health = registry.health().await;
         assert_eq!(health.status, ComponentStatus::Degraded);
     }
@@ -237,9 +239,11 @@ mod tests {
         let registry = HealthRegistry::new();
         registry.register(components::COLLECTOR).await;
         registry.register(components::PREDICTOR).await;
-        
-        registry.set_unhealthy(components::COLLECTOR, "Failed to read cgroups").await;
-        
+
+        registry
+            .set_unhealthy(components::COLLECTOR, "Failed to read cgroups")
+            .await;
+
         let health = registry.health().await;
         assert_eq!(health.status, ComponentStatus::Unhealthy);
     }
@@ -248,7 +252,7 @@ mod tests {
     async fn test_readiness_not_ready_initially() {
         let registry = HealthRegistry::new();
         let readiness = registry.readiness().await;
-        
+
         assert!(!readiness.ready);
         assert!(readiness.reason.is_some());
     }
@@ -257,7 +261,7 @@ mod tests {
     async fn test_readiness_ready_when_set() {
         let registry = HealthRegistry::new();
         registry.set_ready(true).await;
-        
+
         let readiness = registry.readiness().await;
         assert!(readiness.ready);
     }
@@ -267,8 +271,10 @@ mod tests {
         let registry = HealthRegistry::new();
         registry.register(components::COLLECTOR).await;
         registry.set_ready(true).await;
-        registry.set_unhealthy(components::COLLECTOR, "Failed").await;
-        
+        registry
+            .set_unhealthy(components::COLLECTOR, "Failed")
+            .await;
+
         let readiness = registry.readiness().await;
         assert!(!readiness.ready);
     }

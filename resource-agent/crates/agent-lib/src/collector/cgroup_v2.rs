@@ -89,7 +89,7 @@ impl CgroupV2Collector {
         let content = fs::read_to_string(&file_path)
             .await
             .with_context(|| format!("Failed to read {}", file_path.display()))?;
-        
+
         content
             .trim()
             .parse()
@@ -104,7 +104,7 @@ impl CgroupV2Collector {
     pub fn extract_container_id(cgroup_path: &str) -> Option<String> {
         // Try to find container ID patterns
         let path_parts: Vec<&str> = cgroup_path.split('/').collect();
-        
+
         for part in path_parts.iter().rev() {
             // CRI-O format: crio-<container_id>.scope or crio-<container_id>
             if let Some(stripped) = part.strip_prefix("crio-") {
@@ -114,7 +114,7 @@ impl CgroupV2Collector {
                     return Some(id.to_string());
                 }
             }
-            
+
             // Docker/containerd format: plain 64-char hex ID
             if part.len() == 64 && part.chars().all(|c| c.is_ascii_hexdigit()) {
                 return Some(part.to_string());
@@ -222,7 +222,7 @@ impl MetricsCollector for CgroupV2Collector {
         // Find the cgroup path for this container
         // In production, this would be cached from container discovery
         let cgroup_path = self.cgroup_root.join(container_id);
-        
+
         if !cgroup_path.exists() {
             anyhow::bail!("Cgroup path not found for container {}", container_id);
         }
@@ -236,7 +236,7 @@ impl MetricsCollector for CgroupV2Collector {
         // This will be fully implemented in Task 2.3 (container discovery)
         // For now, provide a basic implementation that scans kubepods
         let mut containers = Vec::new();
-        
+
         // Look for kubepods hierarchy (common in Kubernetes)
         let kubepods_path = self.cgroup_root.join("kubepods.slice");
         if kubepods_path.exists() {
@@ -265,10 +265,10 @@ impl CgroupV2Collector {
 
         while let Some(entry) = entries.next_entry().await? {
             let entry_path = entry.path();
-            
+
             if entry_path.is_dir() {
                 let name = entry.file_name().to_string_lossy().to_string();
-                
+
                 // Check if this looks like a container cgroup
                 if let Some(container_id) = Self::extract_container_id(&name) {
                     // Verify it has cgroup files

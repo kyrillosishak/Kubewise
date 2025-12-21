@@ -27,7 +27,11 @@ impl FeatureExtractor {
     }
 
     pub fn with_bounds(window_size: usize, max_cpu_cores: f32, max_memory_bytes: u64) -> Self {
-        Self { window_size, max_cpu_cores, max_memory_bytes }
+        Self {
+            window_size,
+            max_cpu_cores,
+            max_memory_bytes,
+        }
     }
 
     pub fn has_sufficient_data(&self, metrics: &[ContainerMetrics]) -> bool {
@@ -40,7 +44,10 @@ impl FeatureExtractor {
         }
         let samples: Vec<_> = metrics.iter().rev().take(self.window_size).collect();
         let cpu_values: Vec<f32> = samples.iter().map(|m| m.cpu_usage_cores).collect();
-        let mem_values: Vec<f64> = samples.iter().map(|m| m.memory_working_set_bytes as f64).collect();
+        let mem_values: Vec<f64> = samples
+            .iter()
+            .map(|m| m.memory_working_set_bytes as f64)
+            .collect();
 
         Some(FeatureVector {
             cpu_usage_p50: self.normalize_cpu(percentile(&cpu_values, 50.0)),
@@ -72,33 +79,43 @@ impl FeatureExtractor {
     }
 
     fn calculate_memory_trend(&self, mem_values: &[f64]) -> f32 {
-        if mem_values.len() < 2 { return 0.0; }
+        if mem_values.len() < 2 {
+            return 0.0;
+        }
         let slope = linear_regression_slope(mem_values);
         let max_slope = self.max_memory_bytes as f64 / 3600.0;
         ((slope / max_slope) as f32).clamp(-1.0, 1.0)
     }
 
     fn calculate_throttle_ratio(&self, samples: &[&ContainerMetrics]) -> f32 {
-        if samples.len() < 2 { return 0.0; }
+        if samples.len() < 2 {
+            return 0.0;
+        }
         let first = samples.last().unwrap();
         let last = samples.first().unwrap();
-        let throttle_delta = last.cpu_throttled_periods.saturating_sub(first.cpu_throttled_periods);
+        let throttle_delta = last
+            .cpu_throttled_periods
+            .saturating_sub(first.cpu_throttled_periods);
         let time_delta = (last.timestamp - first.timestamp).max(1) as f64;
         ((throttle_delta as f64 / time_delta) / 100.0).clamp(0.0, 1.0) as f32
     }
 
     fn extract_hour(&self, timestamp: i64) -> f32 {
-        let dt = chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
+        let dt =
+            chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
         dt.hour() as f32 / 24.0
     }
 
     fn extract_day(&self, timestamp: i64) -> f32 {
-        let dt = chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
+        let dt =
+            chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now().into());
         dt.weekday().num_days_from_monday() as f32 / 7.0
     }
 
     fn calculate_workload_age(&self, metrics: &[ContainerMetrics]) -> f32 {
-        if metrics.is_empty() { return 0.0; }
+        if metrics.is_empty() {
+            return 0.0;
+        }
         let first = metrics.iter().map(|m| m.timestamp).min().unwrap_or(0);
         let last = metrics.iter().map(|m| m.timestamp).max().unwrap_or(0);
         let age_days = (last - first).max(0) as f64 / 86400.0;
@@ -107,7 +124,9 @@ impl FeatureExtractor {
 }
 
 fn percentile(values: &[f32], p: f32) -> f32 {
-    if values.is_empty() { return 0.0; }
+    if values.is_empty() {
+        return 0.0;
+    }
     let mut sorted: Vec<f32> = values.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let idx = ((p / 100.0) * (sorted.len() - 1) as f32).round() as usize;
@@ -115,7 +134,9 @@ fn percentile(values: &[f32], p: f32) -> f32 {
 }
 
 fn percentile_f64(values: &[f64], p: f32) -> f64 {
-    if values.is_empty() { return 0.0; }
+    if values.is_empty() {
+        return 0.0;
+    }
     let mut sorted: Vec<f64> = values.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let idx = ((p / 100.0) * (sorted.len() - 1) as f32).round() as usize;
@@ -123,7 +144,9 @@ fn percentile_f64(values: &[f64], p: f32) -> f64 {
 }
 
 fn variance(values: &[f32]) -> f32 {
-    if values.len() < 2 { return 0.0; }
+    if values.len() < 2 {
+        return 0.0;
+    }
     let mean: f32 = values.iter().sum::<f32>() / values.len() as f32;
     let sum_sq: f32 = values.iter().map(|v| (v - mean).powi(2)).sum();
     sum_sq / (values.len() - 1) as f32
@@ -131,17 +154,20 @@ fn variance(values: &[f32]) -> f32 {
 
 /// Calculate linear regression slope for trend detection
 pub fn linear_regression_slope(values: &[f64]) -> f64 {
-    if values.len() < 2 { return 0.0; }
+    if values.len() < 2 {
+        return 0.0;
+    }
     let n = values.len() as f64;
     let sum_x: f64 = (0..values.len()).map(|i| i as f64).sum();
     let sum_y: f64 = values.iter().sum();
     let sum_xy: f64 = values.iter().enumerate().map(|(i, y)| i as f64 * y).sum();
     let sum_x2: f64 = (0..values.len()).map(|i| (i as f64).powi(2)).sum();
     let denom = n * sum_x2 - sum_x.powi(2);
-    if denom.abs() < f64::EPSILON { return 0.0; }
+    if denom.abs() < f64::EPSILON {
+        return 0.0;
+    }
     (n * sum_xy - sum_x * sum_y) / denom
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -149,20 +175,22 @@ mod tests {
 
     fn create_test_metrics(count: usize, cpu_base: f32, mem_base: u64) -> Vec<ContainerMetrics> {
         let now = Utc::now().timestamp();
-        (0..count).map(|i| ContainerMetrics {
-            container_id: "test".to_string(),
-            pod_name: "test-pod".to_string(),
-            namespace: "default".to_string(),
-            deployment: Some("test-deploy".to_string()),
-            timestamp: now - (count - i - 1) as i64 * 10,
-            cpu_usage_cores: cpu_base + (i as f32 * 0.01),
-            cpu_throttled_periods: i as u64 * 10,
-            memory_usage_bytes: mem_base + (i as u64 * 1_000_000),
-            memory_working_set_bytes: mem_base + (i as u64 * 1_000_000),
-            memory_cache_bytes: 10_000_000,
-            network_rx_bytes: 1000,
-            network_tx_bytes: 500,
-        }).collect()
+        (0..count)
+            .map(|i| ContainerMetrics {
+                container_id: "test".to_string(),
+                pod_name: "test-pod".to_string(),
+                namespace: "default".to_string(),
+                deployment: Some("test-deploy".to_string()),
+                timestamp: now - (count - i - 1) as i64 * 10,
+                cpu_usage_cores: cpu_base + (i as f32 * 0.01),
+                cpu_throttled_periods: i as u64 * 10,
+                memory_usage_bytes: mem_base + (i as u64 * 1_000_000),
+                memory_working_set_bytes: mem_base + (i as u64 * 1_000_000),
+                memory_cache_bytes: 10_000_000,
+                network_rx_bytes: 1000,
+                network_tx_bytes: 500,
+            })
+            .collect()
     }
 
     #[test]

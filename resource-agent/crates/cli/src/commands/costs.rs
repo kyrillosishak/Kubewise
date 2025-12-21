@@ -46,16 +46,16 @@ pub async fn show_costs(
         OutputFormat::Table => {
             println!("{}", "Cost Analysis".bold());
             println!("{}", "=".repeat(50));
-            
+
             if let Some(ns) = &result.namespace {
                 println!("Namespace:              {}", ns.cyan());
             } else {
                 println!("Scope:                  {}", "Cluster-wide".cyan());
             }
-            
+
             println!("Deployments:            {}", result.deployment_count);
             println!();
-            
+
             println!("{}", "Monthly Costs".bold());
             println!("{}", "-".repeat(50));
             println!(
@@ -67,21 +67,21 @@ pub async fn show_costs(
                 format_currency(result.recommended_monthly_cost, &result.currency).green()
             );
             println!();
-            
+
             let savings_str = format_currency(result.potential_savings, &result.currency);
             let savings_pct = if result.current_monthly_cost > 0.0 {
                 (result.potential_savings / result.current_monthly_cost) * 100.0
             } else {
                 0.0
             };
-            
+
             println!(
                 "{} {} ({:.1}%)",
                 "Potential Savings:".bold(),
                 savings_str.green().bold(),
                 savings_pct
             );
-            
+
             println!();
             println!(
                 "Last updated: {}",
@@ -94,11 +94,7 @@ pub async fn show_costs(
 }
 
 /// Show savings report
-pub async fn show_savings(
-    client: &ApiClient,
-    since: &str,
-    format: OutputFormat,
-) -> Result<()> {
+pub async fn show_savings(client: &ApiClient, since: &str, format: OutputFormat) -> Result<()> {
     let path = format!("api/v1/savings?since={}", since);
     let result: SavingsReport = client.get(&path).await?;
 

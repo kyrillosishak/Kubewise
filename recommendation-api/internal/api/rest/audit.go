@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,18 +14,10 @@ type AuditLogsResponse struct {
 
 // getAuditLogsHandler returns audit log entries
 func getAuditLogsHandler(c *gin.Context) {
-	// Get filter parameters
-	_ = c.Query("namespace") // Reserved for future filtering
-	_ = c.Query("user")      // Reserved for future filtering
-	limitStr := c.DefaultQuery("limit", "100")
-	
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 {
-		limit = 100
-	}
-	if limit > 1000 {
-		limit = 1000
-	}
+	// Get filter parameters - reserved for future filtering
+	_ = c.Query("namespace")
+	_ = c.Query("user")
+	_ = c.DefaultQuery("limit", "100") // Reserved for pagination
 
 	// Check if user has admin access for viewing all logs
 	// or filter to their own namespace

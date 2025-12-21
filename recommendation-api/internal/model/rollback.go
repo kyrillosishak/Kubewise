@@ -143,7 +143,6 @@ func (r *RollbackManager) Rollback(ctx context.Context, targetVersion, reason st
 	}, nil
 }
 
-
 // RollbackToPrevious rolls back to the previous model version
 func (r *RollbackManager) RollbackToPrevious(ctx context.Context, reason string) (*RollbackResult, error) {
 	// Get the previous version

@@ -43,7 +43,7 @@ impl CgroupV1Collector {
         // cgroup v1 has separate controller directories
         let cpuacct_path = self.cgroup_root.join("cpuacct");
         let memory_path = self.cgroup_root.join("memory");
-        
+
         fs::metadata(&cpuacct_path).await.is_ok() && fs::metadata(&memory_path).await.is_ok()
     }
 
@@ -53,7 +53,7 @@ impl CgroupV1Collector {
         let content = fs::read_to_string(&usage_file)
             .await
             .with_context(|| format!("Failed to read {}", usage_file.display()))?;
-        
+
         content
             .trim()
             .parse()
@@ -85,7 +85,7 @@ impl CgroupV1Collector {
         let content = fs::read_to_string(&usage_file)
             .await
             .with_context(|| format!("Failed to read {}", usage_file.display()))?;
-        
+
         content
             .trim()
             .parse()
@@ -112,7 +112,7 @@ impl CgroupV1Collector {
     /// Handles various container runtime formats for cgroup v1
     pub fn extract_container_id(cgroup_path: &str) -> Option<String> {
         let path_parts: Vec<&str> = cgroup_path.split('/').collect();
-        
+
         for part in path_parts.iter().rev() {
             // containerd format with .scope suffix: cri-containerd-<container_id>.scope
             if let Some(stripped) = part.strip_suffix(".scope") {
@@ -122,7 +122,7 @@ impl CgroupV1Collector {
                     }
                 }
             }
-            
+
             // CRI-O format: crio-<container_id>
             if let Some(stripped) = part.strip_prefix("crio-") {
                 // Handle with or without .scope suffix
@@ -131,7 +131,7 @@ impl CgroupV1Collector {
                     return Some(id.to_string());
                 }
             }
-            
+
             // Docker format: docker/<container_id> - plain 64-char hex ID
             if part.len() == 64 && part.chars().all(|c| c.is_ascii_hexdigit()) {
                 return Some(part.to_string());
@@ -163,7 +163,7 @@ impl CgroupV1Collector {
             if parts.len() == 3 {
                 let controllers = parts[1];
                 let path = parts[2];
-                
+
                 // Skip cgroup v2 unified hierarchy (empty controller list)
                 if controllers.is_empty() {
                     continue;
@@ -272,8 +272,14 @@ impl MetricsCollector for CgroupV1Collector {
         }
 
         let metadata = ContainerMetadata::default();
-        self.collect_from_paths(&cpuacct_path, &cpu_path, &memory_path, container_id, &metadata)
-            .await
+        self.collect_from_paths(
+            &cpuacct_path,
+            &cpu_path,
+            &memory_path,
+            container_id,
+            &metadata,
+        )
+        .await
     }
 
     async fn list_containers(&self) -> Result<Vec<ContainerInfo>> {
@@ -283,7 +289,7 @@ impl MetricsCollector for CgroupV1Collector {
 
         // Scan memory controller hierarchy (most reliable for container detection)
         let memory_root = self.cgroup_root.join("memory");
-        
+
         // Look for kubepods hierarchy
         let kubepods_path = memory_root.join("kubepods");
         if kubepods_path.exists() {
@@ -312,10 +318,10 @@ impl CgroupV1Collector {
 
         while let Some(entry) = entries.next_entry().await? {
             let entry_path = entry.path();
-            
+
             if entry_path.is_dir() {
                 let name = entry.file_name().to_string_lossy().to_string();
-                
+
                 // Check if this looks like a container cgroup
                 if let Some(container_id) = Self::extract_container_id(&name) {
                     // Verify it has cgroup files

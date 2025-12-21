@@ -20,14 +20,14 @@ impl Config {
     #[allow(dead_code)]
     pub fn load() -> Result<Self> {
         let config_path = Self::config_path()?;
-        
+
         if !config_path.exists() {
             return Ok(Self::default());
         }
 
-        let content = std::fs::read_to_string(&config_path)
-            .context("Failed to read config file")?;
-        
+        let content =
+            std::fs::read_to_string(&config_path).context("Failed to read config file")?;
+
         serde_json::from_str(&content).context("Failed to parse config file")
     }
 
@@ -35,14 +35,14 @@ impl Config {
     #[allow(dead_code)]
     pub fn save(&self) -> Result<()> {
         let config_path = Self::config_path()?;
-        
+
         if let Some(parent) = config_path.parent() {
             std::fs::create_dir_all(parent).context("Failed to create config directory")?;
         }
 
         let content = serde_json::to_string_pretty(self).context("Failed to serialize config")?;
         std::fs::write(&config_path, content).context("Failed to write config file")?;
-        
+
         Ok(())
     }
 

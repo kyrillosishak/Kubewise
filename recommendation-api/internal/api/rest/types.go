@@ -5,19 +5,19 @@ import "time"
 
 // Recommendation represents a resource recommendation for a deployment
 type Recommendation struct {
-	ID                   string    `json:"id"`
-	Namespace            string    `json:"namespace"`
-	Deployment           string    `json:"deployment"`
-	CpuRequestMillicores uint32    `json:"cpu_request_millicores"`
-	CpuLimitMillicores   uint32    `json:"cpu_limit_millicores"`
-	MemoryRequestBytes   uint64    `json:"memory_request_bytes"`
-	MemoryLimitBytes     uint64    `json:"memory_limit_bytes"`
-	Confidence           float32   `json:"confidence"`
-	ModelVersion         string    `json:"model_version"`
-	Status               string    `json:"status"` // pending, approved, applied, rolled_back
-	CreatedAt            time.Time `json:"created_at"`
-	AppliedAt            *time.Time `json:"applied_at,omitempty"`
-	TimeWindow           string    `json:"time_window"` // peak, off_peak, weekly
+	ID                   string        `json:"id"`
+	Namespace            string        `json:"namespace"`
+	Deployment           string        `json:"deployment"`
+	CpuRequestMillicores uint32        `json:"cpu_request_millicores"`
+	CpuLimitMillicores   uint32        `json:"cpu_limit_millicores"`
+	MemoryRequestBytes   uint64        `json:"memory_request_bytes"`
+	MemoryLimitBytes     uint64        `json:"memory_limit_bytes"`
+	Confidence           float32       `json:"confidence"`
+	ModelVersion         string        `json:"model_version"`
+	Status               string        `json:"status"` // pending, approved, applied, rolled_back
+	CreatedAt            time.Time     `json:"created_at"`
+	AppliedAt            *time.Time    `json:"applied_at,omitempty"`
+	TimeWindow           string        `json:"time_window"` // peak, off_peak, weekly
 	CurrentResources     *ResourceSpec `json:"current_resources,omitempty"`
 	RecommendedResources *ResourceSpec `json:"recommended_resources,omitempty"`
 }
@@ -57,25 +57,24 @@ type ApproveRecommendationResponse struct {
 	Approver string `json:"approver,omitempty"`
 }
 
-
 // CostAnalysis represents cost analysis for a namespace or cluster
 type CostAnalysis struct {
-	Namespace              string  `json:"namespace,omitempty"`
-	CurrentMonthlyCost     float64 `json:"current_monthly_cost"`
-	RecommendedMonthlyCost float64 `json:"recommended_monthly_cost"`
-	PotentialSavings       float64 `json:"potential_savings"`
-	Currency               string  `json:"currency"`
-	DeploymentCount        int     `json:"deployment_count"`
+	Namespace              string    `json:"namespace,omitempty"`
+	CurrentMonthlyCost     float64   `json:"current_monthly_cost"`
+	RecommendedMonthlyCost float64   `json:"recommended_monthly_cost"`
+	PotentialSavings       float64   `json:"potential_savings"`
+	Currency               string    `json:"currency"`
+	DeploymentCount        int       `json:"deployment_count"`
 	LastUpdated            time.Time `json:"last_updated"`
 }
 
 // SavingsReport represents savings over time
 type SavingsReport struct {
-	TotalSavings    float64         `json:"total_savings"`
-	Currency        string          `json:"currency"`
-	Period          string          `json:"period"`
-	SavingsByMonth  []MonthlySaving `json:"savings_by_month"`
-	SavingsByTeam   []TeamSaving    `json:"savings_by_team,omitempty"`
+	TotalSavings   float64         `json:"total_savings"`
+	Currency       string          `json:"currency"`
+	Period         string          `json:"period"`
+	SavingsByMonth []MonthlySaving `json:"savings_by_month"`
+	SavingsByTeam  []TeamSaving    `json:"savings_by_team,omitempty"`
 }
 
 // MonthlySaving represents savings for a specific month

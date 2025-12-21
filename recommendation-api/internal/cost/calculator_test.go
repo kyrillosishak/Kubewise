@@ -62,10 +62,10 @@ func TestCalculateCost(t *testing.T) {
 	calc := NewCalculator(pricing)
 
 	tests := []struct {
-		name     string
-		usage    ResourceUsage
-		wantCPU  float64
-		wantMem  float64
+		name      string
+		usage     ResourceUsage
+		wantCPU   float64
+		wantMem   float64
 		wantTotal float64
 	}{
 		{
@@ -73,7 +73,7 @@ func TestCalculateCost(t *testing.T) {
 			usage: ResourceUsage{
 				Namespace:            "default",
 				Deployment:           "test-app",
-				CPURequestMillicores: 1000, // 1 core
+				CPURequestMillicores: 1000,       // 1 core
 				MemoryRequestBytes:   1073741824, // 1 GB
 				ReplicaCount:         1,
 			},
@@ -129,17 +129,16 @@ func TestCalculateCost(t *testing.T) {
 	}
 }
 
-
 func TestCalculateSavings(t *testing.T) {
 	pricing := NewPricingConfig(ProviderAWS)
 	calc := NewCalculator(pricing)
 
 	tests := []struct {
-		name           string
-		current        ResourceUsage
-		recommended    ResourceUsage
-		wantSavings    float64
-		wantPercent    float64
+		name        string
+		current     ResourceUsage
+		recommended ResourceUsage
+		wantSavings float64
+		wantPercent float64
 	}{
 		{
 			name: "30% CPU reduction",
@@ -155,7 +154,7 @@ func TestCalculateSavings(t *testing.T) {
 				MemoryRequestBytes:   1073741824,
 				ReplicaCount:         1,
 			},
-			wantSavings: 9.31,  // 30% of CPU cost
+			wantSavings: 9.31, // 30% of CPU cost
 			wantPercent: 26.66,
 		},
 		{
@@ -213,7 +212,7 @@ func TestCalculateSavings(t *testing.T) {
 
 func TestCustomRates(t *testing.T) {
 	pricing := NewPricingConfig(ProviderAWS)
-	
+
 	// Set custom rates for a namespace
 	pricing.SetCustomRates("premium", ResourceRates{
 		CPUPricePerCoreHour:  0.10,
@@ -242,13 +241,13 @@ func TestCustomRates(t *testing.T) {
 
 	// Premium should be more expensive
 	if premiumCost.TotalCostMonthly <= defaultCost.TotalCostMonthly {
-		t.Errorf("Premium cost (%v) should be greater than default cost (%v)", 
+		t.Errorf("Premium cost (%v) should be greater than default cost (%v)",
 			premiumCost.TotalCostMonthly, defaultCost.TotalCostMonthly)
 	}
 
 	// Verify premium rates
-	expectedPremiumCPU := 73.0  // 0.10 * 730
-	expectedPremiumMem := 14.6  // 0.02 * 730
+	expectedPremiumCPU := 73.0 // 0.10 * 730
+	expectedPremiumMem := 14.6 // 0.02 * 730
 	if premiumCost.CPUCostMonthly != expectedPremiumCPU {
 		t.Errorf("Premium CPUCostMonthly = %v, want %v", premiumCost.CPUCostMonthly, expectedPremiumCPU)
 	}

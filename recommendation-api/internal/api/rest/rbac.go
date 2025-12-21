@@ -14,11 +14,11 @@ import (
 
 // RBACMiddleware provides namespace-level access control
 type RBACMiddleware struct {
-	mu           sync.RWMutex
-	permissions  map[string][]string // user -> namespaces
-	auditLog     *AuditLogger
-	logger       *slog.Logger
-	authEnabled  bool
+	mu          sync.RWMutex
+	permissions map[string][]string // user -> namespaces
+	auditLog    *AuditLogger
+	logger      *slog.Logger
+	authEnabled bool
 }
 
 // RBACConfig holds RBAC configuration
@@ -52,15 +52,15 @@ type UserInfo struct {
 
 // AuditEntry represents an audit log entry
 type AuditEntry struct {
-	Timestamp   time.Time `json:"timestamp"`
-	User        string    `json:"user"`
-	Action      string    `json:"action"`
-	Resource    string    `json:"resource"`
-	Namespace   string    `json:"namespace"`
-	Allowed     bool      `json:"allowed"`
-	Reason      string    `json:"reason,omitempty"`
-	RequestID   string    `json:"requestId,omitempty"`
-	SourceIP    string    `json:"sourceIp,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	User      string    `json:"user"`
+	Action    string    `json:"action"`
+	Resource  string    `json:"resource"`
+	Namespace string    `json:"namespace"`
+	Allowed   bool      `json:"allowed"`
+	Reason    string    `json:"reason,omitempty"`
+	RequestID string    `json:"requestId,omitempty"`
+	SourceIP  string    `json:"sourceIp,omitempty"`
 }
 
 // AuditLogger handles audit logging
@@ -132,12 +132,12 @@ func (r *RBACMiddleware) Middleware() gin.HandlerFunc {
 		userInfo, err := r.extractUserInfo(c)
 		if err != nil {
 			r.auditLog.Log(AuditEntry{
-				User:      "unknown",
-				Action:    c.Request.Method,
-				Resource:  c.Request.URL.Path,
-				Allowed:   false,
-				Reason:    err.Error(),
-				SourceIP:  c.ClientIP(),
+				User:     "unknown",
+				Action:   c.Request.Method,
+				Resource: c.Request.URL.Path,
+				Allowed:  false,
+				Reason:   err.Error(),
+				SourceIP: c.ClientIP(),
 			})
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "authentication required",
@@ -184,7 +184,7 @@ func (r *RBACMiddleware) NamespaceAuthMiddleware() gin.HandlerFunc {
 
 		// Check access
 		allowed, reason := r.checkNamespaceAccess(userInfo, namespace)
-		
+
 		r.auditLog.Log(AuditEntry{
 			User:      userInfo.Username,
 			Action:    c.Request.Method,
@@ -238,10 +238,10 @@ func (r *RBACMiddleware) validateBearerToken(ctx context.Context, token string) 
 	// In a real implementation, this would:
 	// 1. Validate the token with Kubernetes TokenReview API
 	// 2. Or validate OIDC token with the identity provider
-	
+
 	// For now, return a placeholder that would be replaced with actual validation
 	// This is where you'd integrate with Kubernetes RBAC
-	
+
 	// Placeholder: extract user from token claims
 	// In production, use proper JWT validation
 	return &UserInfo{

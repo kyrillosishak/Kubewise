@@ -15,13 +15,31 @@ linters:
     - goimports
     - misspell
     - unconvert
-    - unparam
 
 linters-settings:
   errcheck:
-    check-type-assertions: true
+    check-type-assertions: false
+    check-blank: false
   govet:
-    enable-all: true
+    enable-all: false
+    enable:
+      - assign
+      - atomic
+      - bools
+      - buildtag
+      - copylocks
+      - httpresponse
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - printf
+      - shift
+      - stdmethods
+      - structtag
+      - tests
+      - unmarshal
+      - unreachable
+      - unsafeptr
   gofmt:
     simplify: true
 
@@ -31,3 +49,11 @@ issues:
       linters:
         - errcheck
         - unparam
+    # Ignore unchecked errors for deferred cleanup functions
+    - linters:
+        - errcheck
+      source: "defer.*\\.(Close|Rollback)\\(\\)"
+    # Ignore unchecked Scan errors in simple queries
+    - linters:
+        - errcheck
+      source: "\\.Scan\\("

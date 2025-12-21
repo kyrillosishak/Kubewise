@@ -163,7 +163,10 @@ async fn main() -> Result<()> {
                 deployment,
                 status,
             } => {
-                recommendations::get_recommendations(&client, namespace, deployment, status, cli.format).await?;
+                recommendations::get_recommendations(
+                    &client, namespace, deployment, status, cli.format,
+                )
+                .await?;
             }
             GetCommands::Models { active_only } => {
                 recommendations::get_models(&client, active_only, cli.format).await?;
@@ -172,8 +175,13 @@ async fn main() -> Result<()> {
         Commands::Apply { id, dry_run } => {
             recommendations::apply_recommendation(&client, &id, dry_run, cli.format).await?;
         }
-        Commands::Approve { id, approver, reason } => {
-            recommendations::approve_recommendation(&client, &id, &approver, reason, cli.format).await?;
+        Commands::Approve {
+            id,
+            approver,
+            reason,
+        } => {
+            recommendations::approve_recommendation(&client, &id, &approver, reason, cli.format)
+                .await?;
         }
         Commands::Costs(costs_cmd) => match costs_cmd {
             CostsCommands::Show { namespace } => {
@@ -190,7 +198,11 @@ async fn main() -> Result<()> {
             DebugCommands::Agent { node } => {
                 debug::show_agent_status(&client, &node, cli.format).await?;
             }
-            DebugCommands::Export { since, output, namespace } => {
+            DebugCommands::Export {
+                since,
+                output,
+                namespace,
+            } => {
                 debug::export_metrics(&client, &since, output, namespace, cli.format).await?;
             }
         },

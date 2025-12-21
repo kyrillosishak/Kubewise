@@ -94,7 +94,6 @@ func NewStorage(cfg *StorageConfig) (*Storage, error) {
 	return s, nil
 }
 
-
 // createS3Client creates an S3 client for S3 or MinIO
 func (s *Storage) createS3Client() (*s3.Client, error) {
 	var opts []func(*config.LoadOptions) error
@@ -167,12 +166,12 @@ func (s *Storage) storeS3(ctx context.Context, version string, weights []byte, c
 	key := fmt.Sprintf("models/model_%s.onnx", version)
 
 	_, err := s.s3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:            aws.String(s.config.Bucket),
-		Key:               aws.String(key),
-		Body:              bytes.NewReader(weights),
-		ContentType:       aws.String("application/octet-stream"),
-		ChecksumSHA256:    aws.String(checksum),
-		ContentLength:     aws.Int64(int64(len(weights))),
+		Bucket:         aws.String(s.config.Bucket),
+		Key:            aws.String(key),
+		Body:           bytes.NewReader(weights),
+		ContentType:    aws.String("application/octet-stream"),
+		ChecksumSHA256: aws.String(checksum),
+		ContentLength:  aws.Int64(int64(len(weights))),
 	})
 	if err != nil {
 		return "", "", fmt.Errorf("failed to upload model to S3: %w", err)

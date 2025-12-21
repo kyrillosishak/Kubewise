@@ -134,20 +134,14 @@ impl MetricsBuffer {
     /// Drain all buffered metrics
     pub fn drain(&mut self) -> Vec<ContainerMetrics> {
         self.dirty = true;
-        self.buffer
-            .drain(..)
-            .map(|tm| tm.metrics)
-            .collect()
+        self.buffer.drain(..).map(|tm| tm.metrics).collect()
     }
 
     /// Drain metrics up to a limit
     pub fn drain_batch(&mut self, limit: usize) -> Vec<ContainerMetrics> {
         let count = limit.min(self.buffer.len());
         self.dirty = true;
-        self.buffer
-            .drain(..count)
-            .map(|tm| tm.metrics)
-            .collect()
+        self.buffer.drain(..count).map(|tm| tm.metrics).collect()
     }
 
     /// Peek at buffered metrics without removing them
@@ -228,8 +222,7 @@ impl MetricsBuffer {
 
         // Serialize metrics to JSON
         let metrics: Vec<&ContainerMetrics> = self.buffer.iter().map(|tm| &tm.metrics).collect();
-        let json = serde_json::to_vec(&metrics)
-            .context("Failed to serialize metrics")?;
+        let json = serde_json::to_vec(&metrics).context("Failed to serialize metrics")?;
 
         // Write atomically using temp file
         let temp_path = path.with_extension("tmp");
@@ -242,8 +235,7 @@ impl MetricsBuffer {
 
         file.write_all(&json)
             .context("Failed to write buffer data")?;
-        file.sync_all()
-            .context("Failed to sync buffer file")?;
+        file.sync_all().context("Failed to sync buffer file")?;
 
         // Rename temp file to final path
         std::fs::rename(&temp_path, path)
@@ -254,18 +246,21 @@ impl MetricsBuffer {
 
     /// Load buffer from disk
     fn load_from_disk(&mut self) -> Result<()> {
-        let path = self.config.persistence_path.as_ref()
+        let path = self
+            .config
+            .persistence_path
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No persistence path configured"))?;
 
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open buffer file {:?}", path))?;
+        let mut file =
+            File::open(path).with_context(|| format!("Failed to open buffer file {:?}", path))?;
 
         let mut data = Vec::new();
         file.read_to_end(&mut data)
             .context("Failed to read buffer file")?;
 
-        let metrics: Vec<ContainerMetrics> = serde_json::from_slice(&data)
-            .context("Failed to deserialize buffer data")?;
+        let metrics: Vec<ContainerMetrics> =
+            serde_json::from_slice(&data).context("Failed to deserialize buffer data")?;
 
         let now = SystemTime::now();
         for m in metrics {

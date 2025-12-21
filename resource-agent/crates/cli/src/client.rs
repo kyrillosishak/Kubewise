@@ -27,7 +27,7 @@ impl ApiClient {
     /// Make a GET request
     pub async fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let url = self.base_url.join(path).context("Invalid path")?;
-        
+
         let response = self
             .client
             .get(url)
@@ -47,7 +47,7 @@ impl ApiClient {
     /// Make a POST request with JSON body
     pub async fn post<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> Result<T> {
         let url = self.base_url.join(path).context("Invalid path")?;
-        
+
         let response = self
             .client
             .post(url)

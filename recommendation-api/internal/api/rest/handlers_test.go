@@ -126,7 +126,6 @@ func TestGetRecommendationHandler(t *testing.T) {
 	}
 }
 
-
 func TestApplyRecommendationHandler(t *testing.T) {
 	router := setupRouter()
 

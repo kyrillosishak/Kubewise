@@ -44,28 +44,27 @@ type DeploymentStats struct {
 
 // NamespaceStats holds statistics for a namespace
 type NamespaceStats struct {
-	Namespace         string
-	DeploymentCount   int
-	TotalPredictions  int
-	AvgConfidence     float32
-	PotentialSavings  float64
+	Namespace        string
+	DeploymentCount  int
+	TotalPredictions int
+	AvgConfidence    float32
+	PotentialSavings float64
 }
 
 // ClusterStats holds cluster-wide statistics
 type ClusterStats struct {
-	TotalNamespaces   int
-	TotalDeployments  int
-	TotalPredictions  int
-	AvgConfidence     float32
-	TotalSavings      float64
+	TotalNamespaces  int
+	TotalDeployments int
+	TotalPredictions int
+	AvgConfidence    float32
+	TotalSavings     float64
 }
-
 
 // AggregateByDeployment aggregates predictions by deployment
 func (a *Aggregator) AggregateByDeployment(ctx context.Context, namespace, deployment string, timeWindow string) (*AggregatedRecommendation, error) {
 	// Get predictions for the deployment within the time window
 	windowDuration := getWindowDuration(timeWindow)
-	
+
 	query := `
 		SELECT 
 			namespace,
@@ -228,7 +227,6 @@ func (a *Aggregator) GetClusterStats(ctx context.Context) (*ClusterStats, error)
 	return &stats, nil
 }
 
-
 // GenerateRecommendations generates recommendations from aggregated predictions
 func (a *Aggregator) GenerateRecommendations(ctx context.Context) error {
 	slog.Info("Starting recommendation generation")
@@ -265,9 +263,9 @@ func (a *Aggregator) GenerateRecommendations(ctx context.Context) error {
 
 		for _, rec := range recommendations {
 			if err := a.upsertRecommendation(ctx, &rec); err != nil {
-				slog.Error("Failed to upsert recommendation", 
-					"namespace", rec.Namespace, 
-					"deployment", rec.Deployment, 
+				slog.Error("Failed to upsert recommendation",
+					"namespace", rec.Namespace,
+					"deployment", rec.Deployment,
 					"error", err)
 			}
 		}

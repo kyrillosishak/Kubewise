@@ -122,7 +122,6 @@ func (r *Repository) CreateModel(ctx context.Context, input *CreateModelInput) (
 	}, nil
 }
 
-
 // GetModel retrieves a model version by version string
 func (r *Repository) GetModel(ctx context.Context, version string) (*ModelVersion, error) {
 	query := `

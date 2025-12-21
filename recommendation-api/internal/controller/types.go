@@ -18,12 +18,12 @@ type ResourceRecommendation struct {
 
 // ResourceRecommendationSpec defines the desired state
 type ResourceRecommendationSpec struct {
-	TargetRef        TargetRef        `json:"targetRef"`
-	Recommendation   Recommendation   `json:"recommendation"`
-	CostImpact       *CostImpact      `json:"costImpact,omitempty"`
-	AutoApply        bool             `json:"autoApply,omitempty"`
-	RequiresApproval bool             `json:"requiresApproval,omitempty"`
-	RiskLevel        string           `json:"riskLevel,omitempty"`
+	TargetRef        TargetRef      `json:"targetRef"`
+	Recommendation   Recommendation `json:"recommendation"`
+	CostImpact       *CostImpact    `json:"costImpact,omitempty"`
+	AutoApply        bool           `json:"autoApply,omitempty"`
+	RequiresApproval bool           `json:"requiresApproval,omitempty"`
+	RiskLevel        string         `json:"riskLevel,omitempty"`
 }
 
 // TargetRef identifies the target workload
@@ -36,14 +36,14 @@ type TargetRef struct {
 
 // Recommendation contains the recommended resource values
 type Recommendation struct {
-	CPURequest   string    `json:"cpuRequest,omitempty"`
-	CPULimit     string    `json:"cpuLimit,omitempty"`
-	MemoryRequest string   `json:"memoryRequest,omitempty"`
-	MemoryLimit  string    `json:"memoryLimit,omitempty"`
-	Confidence   float64   `json:"confidence,omitempty"`
-	ModelVersion string    `json:"modelVersion,omitempty"`
-	GeneratedAt  time.Time `json:"generatedAt,omitempty"`
-	TimeWindow   string    `json:"timeWindow,omitempty"`
+	CPURequest    string    `json:"cpuRequest,omitempty"`
+	CPULimit      string    `json:"cpuLimit,omitempty"`
+	MemoryRequest string    `json:"memoryRequest,omitempty"`
+	MemoryLimit   string    `json:"memoryLimit,omitempty"`
+	Confidence    float64   `json:"confidence,omitempty"`
+	ModelVersion  string    `json:"modelVersion,omitempty"`
+	GeneratedAt   time.Time `json:"generatedAt,omitempty"`
+	TimeWindow    string    `json:"timeWindow,omitempty"`
 }
 
 // CostImpact contains cost analysis
@@ -88,10 +88,10 @@ type PreviousResources struct {
 
 // Outcome tracks the result of applying a recommendation
 type Outcome struct {
-	OOMKills           int     `json:"oomKills,omitempty"`
+	OOMKills            int     `json:"oomKills,omitempty"`
 	CPUThrottleIncrease float64 `json:"cpuThrottleIncrease,omitempty"`
-	ObservationPeriod  string  `json:"observationPeriod,omitempty"`
-	Healthy            bool    `json:"healthy,omitempty"`
+	ObservationPeriod   string  `json:"observationPeriod,omitempty"`
+	Healthy             bool    `json:"healthy,omitempty"`
 }
 
 // ResourceRecommendationList contains a list of ResourceRecommendation
@@ -120,8 +120,8 @@ const (
 
 // Condition types
 const (
-	ConditionTypeReady     = "Ready"
-	ConditionTypeApproved  = "Approved"
-	ConditionTypeApplied   = "Applied"
-	ConditionTypeHealthy   = "Healthy"
+	ConditionTypeReady    = "Ready"
+	ConditionTypeApproved = "Approved"
+	ConditionTypeApplied  = "Applied"
+	ConditionTypeHealthy  = "Healthy"
 )

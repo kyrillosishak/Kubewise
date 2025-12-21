@@ -424,11 +424,7 @@ mod tests {
         let metrics1 = rx.try_recv().unwrap();
         let metrics2 = rx.try_recv().unwrap();
 
-        assert!(
-            metrics1.container_id == "container1" || metrics1.container_id == "container2"
-        );
-        assert!(
-            metrics2.container_id == "container1" || metrics2.container_id == "container2"
-        );
+        assert!(metrics1.container_id == "container1" || metrics1.container_id == "container2");
+        assert!(metrics2.container_id == "container1" || metrics2.container_id == "container2");
     }
 }

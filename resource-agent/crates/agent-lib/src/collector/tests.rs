@@ -162,8 +162,12 @@ total_inactive_file 13107200
         let cgroup_root = temp_dir.path().to_path_buf();
 
         // Create controller directories but no container
-        fs::create_dir_all(cgroup_root.join("cpuacct")).await.unwrap();
-        fs::create_dir_all(cgroup_root.join("memory")).await.unwrap();
+        fs::create_dir_all(cgroup_root.join("cpuacct"))
+            .await
+            .unwrap();
+        fs::create_dir_all(cgroup_root.join("memory"))
+            .await
+            .unwrap();
 
         let collector = CgroupV1Collector::new(&cgroup_root);
         let result = collector.collect("nonexistent").await;
@@ -358,10 +362,7 @@ mod container_id_extraction_tests {
 
     #[test]
     fn test_extract_crio_format_v1() {
-        let path = format!(
-            "/kubepods/besteffort/pod123/crio-{}",
-            VALID_CONTAINER_ID
-        );
+        let path = format!("/kubepods/besteffort/pod123/crio-{}", VALID_CONTAINER_ID);
         let id = CgroupV1Collector::extract_container_id(&path);
         assert_eq!(id, Some(VALID_CONTAINER_ID.to_string()));
     }

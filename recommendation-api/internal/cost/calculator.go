@@ -100,7 +100,6 @@ func NewCalculator(pricing *PricingConfig) *Calculator {
 	return &Calculator{pricing: pricing}
 }
 
-
 // CalculateCost calculates the monthly cost for given resource usage
 func (c *Calculator) CalculateCost(usage ResourceUsage) CostBreakdown {
 	cpuPrice := c.pricing.GetCPUPrice(usage.Namespace)

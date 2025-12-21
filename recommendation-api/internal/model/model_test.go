@@ -244,7 +244,6 @@ func TestStorageLocalPathCreation(t *testing.T) {
 	}
 }
 
-
 // Tests for federated learning
 
 func TestParseGradients(t *testing.T) {

@@ -12,11 +12,11 @@ import (
 type CloudProvider string
 
 const (
-	ProviderAWS      CloudProvider = "aws"
-	ProviderGCP      CloudProvider = "gcp"
-	ProviderAzure    CloudProvider = "azure"
-	ProviderOnPrem   CloudProvider = "on_premise"
-	ProviderCustom   CloudProvider = "custom"
+	ProviderAWS    CloudProvider = "aws"
+	ProviderGCP    CloudProvider = "gcp"
+	ProviderAzure  CloudProvider = "azure"
+	ProviderOnPrem CloudProvider = "on_premise"
+	ProviderCustom CloudProvider = "custom"
 )
 
 // PricingConfig holds the pricing configuration for cost calculations
@@ -94,11 +94,10 @@ var DefaultPricingConfigs = map[CloudProvider]struct {
 		Provider:             ProviderOnPrem,
 		Region:               "default",
 		Currency:             "USD",
-		CPUPricePerCoreHour:  0.030,  // Conservative on-premise estimate
-		MemoryPricePerGBHour: 0.004,  // Conservative on-premise estimate
+		CPUPricePerCoreHour:  0.030, // Conservative on-premise estimate
+		MemoryPricePerGBHour: 0.004, // Conservative on-premise estimate
 	},
 }
-
 
 // NewPricingConfig creates a new pricing configuration with defaults
 func NewPricingConfig(provider CloudProvider) *PricingConfig {

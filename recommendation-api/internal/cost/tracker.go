@@ -21,39 +21,39 @@ type CostSnapshot struct {
 
 // SavingsRecord represents actual savings after recommendation application
 type SavingsRecord struct {
-	ID                 string    `json:"id"`
-	RecommendationID   string    `json:"recommendation_id"`
-	Namespace          string    `json:"namespace"`
-	Deployment         string    `json:"deployment"`
-	AppliedAt          time.Time `json:"applied_at"`
-	CostBeforeMonthly  float64   `json:"cost_before_monthly"`
-	CostAfterMonthly   float64   `json:"cost_after_monthly"`
-	ActualSavings      float64   `json:"actual_savings"`
-	MeasuredAt         time.Time `json:"measured_at"`
-	MeasurementPeriod  int       `json:"measurement_period_days"`
+	ID                string    `json:"id"`
+	RecommendationID  string    `json:"recommendation_id"`
+	Namespace         string    `json:"namespace"`
+	Deployment        string    `json:"deployment"`
+	AppliedAt         time.Time `json:"applied_at"`
+	CostBeforeMonthly float64   `json:"cost_before_monthly"`
+	CostAfterMonthly  float64   `json:"cost_after_monthly"`
+	ActualSavings     float64   `json:"actual_savings"`
+	MeasuredAt        time.Time `json:"measured_at"`
+	MeasurementPeriod int       `json:"measurement_period_days"`
 }
 
 // NamespaceSavingsReport represents savings report for a namespace
 type NamespaceSavingsReport struct {
-	Namespace          string    `json:"namespace"`
-	TotalSavings       float64   `json:"total_savings"`
-	ProjectedSavings   float64   `json:"projected_savings"`
-	AppliedCount       int       `json:"applied_count"`
-	PendingCount       int       `json:"pending_count"`
-	Period             string    `json:"period"`
-	Currency           string    `json:"currency"`
-	LastUpdated        time.Time `json:"last_updated"`
+	Namespace        string    `json:"namespace"`
+	TotalSavings     float64   `json:"total_savings"`
+	ProjectedSavings float64   `json:"projected_savings"`
+	AppliedCount     int       `json:"applied_count"`
+	PendingCount     int       `json:"pending_count"`
+	Period           string    `json:"period"`
+	Currency         string    `json:"currency"`
+	LastUpdated      time.Time `json:"last_updated"`
 }
 
 // TeamSavingsReport represents savings report for a team
 type TeamSavingsReport struct {
-	Team               string    `json:"team"`
-	Namespaces         []string  `json:"namespaces"`
-	TotalSavings       float64   `json:"total_savings"`
-	ProjectedSavings   float64   `json:"projected_savings"`
-	AppliedCount       int       `json:"applied_count"`
-	Period             string    `json:"period"`
-	Currency           string    `json:"currency"`
+	Team             string   `json:"team"`
+	Namespaces       []string `json:"namespaces"`
+	TotalSavings     float64  `json:"total_savings"`
+	ProjectedSavings float64  `json:"projected_savings"`
+	AppliedCount     int      `json:"applied_count"`
+	Period           string   `json:"period"`
+	Currency         string   `json:"currency"`
 }
 
 // SavingsTracker tracks cost savings over time
@@ -69,7 +69,6 @@ func NewSavingsTracker(db *sql.DB, calculator *Calculator) *SavingsTracker {
 		calculator: calculator,
 	}
 }
-
 
 // RecordDailySnapshot records a daily cost snapshot for a namespace
 func (t *SavingsTracker) RecordDailySnapshot(ctx context.Context, snapshot CostSnapshot) error {
@@ -270,7 +269,6 @@ func (t *SavingsTracker) TrackActualSavings(ctx context.Context, recommendationI
 
 	return nil
 }
-
 
 // GetNamespaceSavingsReport generates a savings report for a namespace
 func (t *SavingsTracker) GetNamespaceSavingsReport(ctx context.Context, namespace, period string) (*NamespaceSavingsReport, error) {

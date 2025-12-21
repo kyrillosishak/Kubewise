@@ -7,8 +7,8 @@
 
 use crate::models::{ContainerMetrics as LocalMetrics, ResourceProfile as LocalProfile};
 use crate::proto::{
-    Anomaly as ProtoAnomaly, ContainerMetrics as ProtoMetrics, MetricsBatch,
-    PredictorSyncClient, ResourceProfile as ProtoProfile, SyncResponse,
+    Anomaly as ProtoAnomaly, ContainerMetrics as ProtoMetrics, MetricsBatch, PredictorSyncClient,
+    ResourceProfile as ProtoProfile, SyncResponse,
 };
 use anyhow::{Context, Result};
 use std::sync::Arc;

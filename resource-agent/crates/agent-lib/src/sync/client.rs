@@ -295,10 +295,7 @@ impl SyncClient {
         state.reconnect_attempts += 1;
 
         // Calculate next backoff with exponential increase
-        let next_backoff = std::cmp::min(
-            state.current_backoff * 2,
-            self.config.max_backoff,
-        );
+        let next_backoff = std::cmp::min(state.current_backoff * 2, self.config.max_backoff);
         state.current_backoff = next_backoff;
 
         // Clear the channel

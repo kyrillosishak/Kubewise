@@ -131,12 +131,16 @@ impl AgentMetrics {
 
     /// Record a collection latency observation
     pub fn observe_collection_latency(&self, duration_secs: f64) {
-        self.inner().collection_latency_seconds.observe(duration_secs);
+        self.inner()
+            .collection_latency_seconds
+            .observe(duration_secs);
     }
 
     /// Record a prediction latency observation
     pub fn observe_prediction_latency(&self, duration_secs: f64) {
-        self.inner().prediction_latency_seconds.observe(duration_secs);
+        self.inner()
+            .prediction_latency_seconds
+            .observe(duration_secs);
     }
 
     /// Update buffer size metrics

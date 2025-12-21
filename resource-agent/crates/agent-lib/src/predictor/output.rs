@@ -51,7 +51,9 @@ pub struct OutputFormatter {
 
 impl OutputFormatter {
     pub fn new() -> Self {
-        Self { config: OutputConfig::default() }
+        Self {
+            config: OutputConfig::default(),
+        }
     }
 
     pub fn with_config(config: OutputConfig) -> Self {
@@ -59,7 +61,7 @@ impl OutputFormatter {
     }
 
     /// Format raw model outputs into a ResourceProfile
-    /// 
+    ///
     /// # Arguments
     /// * `raw_outputs` - Raw model outputs [cpu_req, cpu_lim, mem_req, mem_lim, confidence]
     /// * `model_version` - Version string of the model
@@ -74,8 +76,12 @@ impl OutputFormatter {
         let mem_limit_with_buffer = self.apply_memory_buffer(mem_limit);
 
         // Ensure limits are at least as large as requests
-        let final_cpu_limit = cpu_limit.max(cpu_request).max(self.config.min_cpu_millicores);
-        let final_mem_limit = mem_limit_with_buffer.max(mem_request).max(self.config.min_memory_bytes);
+        let final_cpu_limit = cpu_limit
+            .max(cpu_request)
+            .max(self.config.min_cpu_millicores);
+        let final_mem_limit = mem_limit_with_buffer
+            .max(mem_request)
+            .max(self.config.min_memory_bytes);
 
         // Calculate final confidence score
         let confidence = self.calculate_confidence(raw_confidence);
@@ -150,11 +156,16 @@ mod tests {
         // Memory limit should have 20% buffer
         let expected_base = (0.2 * MAX_MEMORY_GB * 1024.0 * 1024.0 * 1024.0) as u64;
         let expected_with_buffer = expected_base + (expected_base as f64 * 0.20) as u64;
-        
+
         // Allow small floating point difference
         let diff = (profile.memory_limit_bytes as i64 - expected_with_buffer as i64).abs();
-        assert!(diff < 1000, "Memory limit {} differs from expected {} by {}", 
-            profile.memory_limit_bytes, expected_with_buffer, diff);
+        assert!(
+            diff < 1000,
+            "Memory limit {} differs from expected {} by {}",
+            profile.memory_limit_bytes,
+            expected_with_buffer,
+            diff
+        );
     }
 
     #[test]
@@ -183,7 +194,7 @@ mod tests {
     #[test]
     fn test_confidence_clamped() {
         let formatter = OutputFormatter::new();
-        
+
         let raw_high = [0.1, 0.2, 0.1, 0.2, 1.5];
         let profile_high = formatter.format(&raw_high, "v1.0.0");
         assert!(profile_high.confidence <= 1.0);
@@ -196,10 +207,10 @@ mod tests {
     #[test]
     fn test_low_confidence_detection() {
         let formatter = OutputFormatter::new();
-        
+
         let raw_low = [0.1, 0.2, 0.1, 0.2, 0.5];
         let profile = formatter.format(&raw_low, "v1.0.0");
-        
+
         assert!(formatter.is_low_confidence(&profile));
         assert!(formatter.low_confidence_reason(&profile).is_some());
     }
@@ -207,10 +218,10 @@ mod tests {
     #[test]
     fn test_high_confidence_no_reason() {
         let formatter = OutputFormatter::new();
-        
+
         let raw = [0.1, 0.2, 0.1, 0.2, 0.9];
         let profile = formatter.format(&raw, "v1.0.0");
-        
+
         assert!(!formatter.is_low_confidence(&profile));
         assert!(formatter.low_confidence_reason(&profile).is_none());
     }

@@ -25,10 +25,10 @@ type ServerConfig struct {
 	// Address to listen on
 	Address string
 	// TLS configuration
-	CertFile   string
-	KeyFile    string
-	CAFile     string
-	EnableTLS  bool
+	CertFile  string
+	KeyFile   string
+	CAFile    string
+	EnableTLS bool
 	// Rate limiting
 	RateLimitPerAgent int // requests per minute per agent
 	// Handlers
@@ -71,7 +71,6 @@ type ModelInfo struct {
 	ValidationAccuracy float32
 	SizeBytes          int64
 }
-
 
 // Server implements the gRPC PredictorSync service
 type Server struct {
@@ -165,7 +164,6 @@ func (s *Server) Stop() {
 	slog.Info("Stopping gRPC server")
 	s.grpcServer.Stop()
 }
-
 
 // Register handles agent registration
 func (s *Server) Register(ctx context.Context, req *predictorv1.RegisterRequest) (*predictorv1.RegisterResponse, error) {
@@ -280,7 +278,6 @@ func (s *Server) SyncMetrics(stream predictorv1.PredictorSync_SyncMetricsServer)
 		totalPredictions += predictionsCount
 	}
 }
-
 
 // GetModelUpdate handles model update requests
 func (s *Server) GetModelUpdate(ctx context.Context, req *predictorv1.ModelRequest) (*predictorv1.ModelResponse, error) {

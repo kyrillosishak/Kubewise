@@ -5,8 +5,8 @@ use tabled::Tabled;
 
 use crate::client::{ApiClient, ApplyRequest, ApproveRequest, ModelList, RecommendationList};
 use crate::output::{
-    color_confidence, color_status, format_bytes, format_cpu, print_success,
-    print_warning, OutputFormat,
+    color_confidence, color_status, format_bytes, format_cpu, print_success, print_warning,
+    OutputFormat,
 };
 
 /// Row for recommendations table
@@ -120,11 +120,7 @@ pub async fn get_recommendations(
 }
 
 /// Get model versions
-pub async fn get_models(
-    client: &ApiClient,
-    active_only: bool,
-    format: OutputFormat,
-) -> Result<()> {
+pub async fn get_models(client: &ApiClient, active_only: bool, format: OutputFormat) -> Result<()> {
     let result: ModelList = client.get("api/v1/models").await?;
 
     let filtered: Vec<_> = if active_only {
@@ -193,7 +189,7 @@ pub async fn apply_recommendation(
                 println!("\nRecommendation: {}", id);
                 println!("Status: {}", response.status);
                 println!("Message: {}", response.message);
-                
+
                 if let Some(patch) = &response.yaml_patch {
                     println!("\nYAML Patch that would be applied:");
                     println!("---");

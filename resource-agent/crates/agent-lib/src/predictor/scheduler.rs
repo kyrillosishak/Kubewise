@@ -174,7 +174,13 @@ impl PredictionScheduler {
 
             let should = buffer.should_predict(self.config.prediction_interval);
             let metrics = buffer.metrics.clone();
-            let meta = metrics.last().map(|m| (m.pod_name.clone(), m.namespace.clone(), m.deployment.clone()));
+            let meta = metrics.last().map(|m| {
+                (
+                    m.pod_name.clone(),
+                    m.namespace.clone(),
+                    m.deployment.clone(),
+                )
+            });
             (should, metrics, meta)
         };
 
@@ -277,14 +283,19 @@ impl PredictionScheduler {
     /// Get the last prediction for a container
     pub async fn get_last_prediction(&self, container_id: &str) -> Option<ResourceProfile> {
         let buffers = self.buffers.read().await;
-        buffers.get(container_id).and_then(|b| b.last_profile.clone())
+        buffers
+            .get(container_id)
+            .and_then(|b| b.last_profile.clone())
     }
 
     /// Get statistics about the scheduler
     pub async fn stats(&self) -> SchedulerStats {
         let buffers = self.buffers.read().await;
         let total_containers = buffers.len();
-        let containers_with_predictions = buffers.values().filter(|b| b.last_profile.is_some()).count();
+        let containers_with_predictions = buffers
+            .values()
+            .filter(|b| b.last_profile.is_some())
+            .count();
         let total_samples: usize = buffers.values().map(|b| b.metrics.len()).sum();
 
         SchedulerStats {
@@ -315,20 +326,22 @@ mod tests {
 
     fn create_test_metrics(container_id: &str, count: usize) -> Vec<ContainerMetrics> {
         let now = chrono::Utc::now().timestamp();
-        (0..count).map(|i| ContainerMetrics {
-            container_id: container_id.to_string(),
-            pod_name: "test-pod".to_string(),
-            namespace: "default".to_string(),
-            deployment: Some("test-deploy".to_string()),
-            timestamp: now - (count - i - 1) as i64 * 10,
-            cpu_usage_cores: 0.5 + (i as f32 * 0.01),
-            cpu_throttled_periods: i as u64 * 10,
-            memory_usage_bytes: 100_000_000 + (i as u64 * 1_000_000),
-            memory_working_set_bytes: 100_000_000 + (i as u64 * 1_000_000),
-            memory_cache_bytes: 10_000_000,
-            network_rx_bytes: 1000,
-            network_tx_bytes: 500,
-        }).collect()
+        (0..count)
+            .map(|i| ContainerMetrics {
+                container_id: container_id.to_string(),
+                pod_name: "test-pod".to_string(),
+                namespace: "default".to_string(),
+                deployment: Some("test-deploy".to_string()),
+                timestamp: now - (count - i - 1) as i64 * 10,
+                cpu_usage_cores: 0.5 + (i as f32 * 0.01),
+                cpu_throttled_periods: i as u64 * 10,
+                memory_usage_bytes: 100_000_000 + (i as u64 * 1_000_000),
+                memory_working_set_bytes: 100_000_000 + (i as u64 * 1_000_000),
+                memory_cache_bytes: 10_000_000,
+                network_rx_bytes: 1000,
+                network_tx_bytes: 500,
+            })
+            .collect()
     }
 
     #[tokio::test]

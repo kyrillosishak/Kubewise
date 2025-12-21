@@ -224,7 +224,8 @@ impl Alerter {
             "Warning"
         };
 
-        let message = format!(
+        let message =
+            format!(
             "Memory leak detected: {:.2} MB/hour increase. Current: {} MB. Confidence: {:.0}%{}",
             anomaly.leak_rate_mb_per_hour(),
             anomaly.current_memory_bytes / (1024 * 1024),
@@ -477,8 +478,8 @@ mod tests {
 
     #[test]
     fn test_deduplication() {
-        let alerter = Alerter::new("node-1".to_string())
-            .with_dedup_window(Duration::from_millis(100));
+        let alerter =
+            Alerter::new("node-1".to_string()).with_dedup_window(Duration::from_millis(100));
 
         let ctx = test_context();
         let anomaly = LeakAnomaly {
@@ -542,13 +543,14 @@ mod tests {
         let alert = alerter.create_spike_alertmanager_alert(&anomaly, &ctx, "2024-01-01T00:00:00Z");
 
         assert_eq!(alert.status, "firing");
-        assert_eq!(
-            alert.labels.get("alertname").unwrap(),
-            "ContainerCPUSpike"
-        );
+        assert_eq!(alert.labels.get("alertname").unwrap(), "ContainerCPUSpike");
         assert_eq!(alert.labels.get("namespace").unwrap(), "default");
         assert_eq!(alert.labels.get("pod").unwrap(), "test-pod");
-        assert!(alert.annotations.get("description").unwrap().contains("2.5"));
+        assert!(alert
+            .annotations
+            .get("description")
+            .unwrap()
+            .contains("2.5"));
     }
 
     #[test]

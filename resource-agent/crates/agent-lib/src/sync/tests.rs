@@ -52,7 +52,9 @@ mod buffer_reconnection_tests {
 
         // Buffer metrics while offline
         for i in 0..10 {
-            assert!(manager.buffer_if_offline(create_test_metrics(&format!("c{}", i), 1000 + i as i64)));
+            assert!(
+                manager.buffer_if_offline(create_test_metrics(&format!("c{}", i), 1000 + i as i64))
+            );
         }
         assert_eq!(manager.pending_sync_count(), 10);
 
@@ -209,7 +211,10 @@ mod model_update_tests {
         let model_path = temp_dir.path().join("model_v1.onnx");
         fs::write(&model_path, b"model v1 weights").unwrap();
 
-        client.load_existing_model("v1.0.0", &model_path).await.unwrap();
+        client
+            .load_existing_model("v1.0.0", &model_path)
+            .await
+            .unwrap();
 
         // Verify model is loaded
         assert_eq!(client.current_version().await, Some("v1.0.0".to_string()));
@@ -230,7 +235,10 @@ mod model_update_tests {
         // Load initial model
         let model_v1_path = temp_dir.path().join("model_v1.onnx");
         fs::write(&model_v1_path, b"model v1 weights").unwrap();
-        client.load_existing_model("v1.0.0", &model_v1_path).await.unwrap();
+        client
+            .load_existing_model("v1.0.0", &model_v1_path)
+            .await
+            .unwrap();
 
         // No rollback available yet
         let rollback_versions = client.available_rollback_versions().await;
@@ -275,7 +283,10 @@ mod model_update_tests {
         // Load a model
         let model_path = temp_dir.path().join("model_v1.onnx");
         fs::write(&model_path, b"model v1 weights").unwrap();
-        client.load_existing_model("v1.0.0", &model_path).await.unwrap();
+        client
+            .load_existing_model("v1.0.0", &model_path)
+            .await
+            .unwrap();
 
         // Updated stats
         let stats = client.stats().await;
@@ -344,11 +355,8 @@ mod streaming_tests {
             ..Default::default()
         };
 
-        let (streamer, mut receiver) = MetricsStreamer::new(
-            config,
-            "test-agent".to_string(),
-            "test-node".to_string(),
-        );
+        let (streamer, mut receiver) =
+            MetricsStreamer::new(config, "test-agent".to_string(), "test-node".to_string());
 
         // Queue some metrics
         let metrics = vec![
@@ -371,11 +379,8 @@ mod streaming_tests {
             ..Default::default()
         };
 
-        let (streamer, _receiver) = MetricsStreamer::new(
-            config,
-            "test-agent".to_string(),
-            "test-node".to_string(),
-        );
+        let (streamer, _receiver) =
+            MetricsStreamer::new(config, "test-agent".to_string(), "test-node".to_string());
 
         // Fill the buffer
         for i in 0..2 {
@@ -397,11 +402,8 @@ mod streaming_tests {
     #[tokio::test]
     async fn test_streaming_stats() {
         let config = StreamingConfig::default();
-        let (streamer, _receiver) = MetricsStreamer::new(
-            config,
-            "test-agent".to_string(),
-            "test-node".to_string(),
-        );
+        let (streamer, _receiver) =
+            MetricsStreamer::new(config, "test-agent".to_string(), "test-node".to_string());
 
         let stats = streamer.stats().await;
         assert_eq!(stats.batches_sent, 0);

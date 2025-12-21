@@ -286,8 +286,8 @@ mod tests {
 
     #[test]
     fn test_oom_projection() {
-        let detector = LeakDetector::new(Duration::from_secs(3600), 1000.0)
-            .with_memory_limit(200_000_000); // 200MB limit
+        let detector =
+            LeakDetector::new(Duration::from_secs(3600), 1000.0).with_memory_limit(200_000_000); // 200MB limit
 
         // Starting at 100MB, increasing 1MB per minute
         let samples: Vec<(i64, u64)> = (0..60)

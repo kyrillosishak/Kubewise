@@ -12,7 +12,7 @@ mod r#loop;
 #[cfg(test)]
 mod tests;
 
-pub use cgroup_v1::{CgroupV1Collector, CgroupVersion, detect_cgroup_version};
+pub use cgroup_v1::{detect_cgroup_version, CgroupV1Collector, CgroupVersion};
 pub use cgroup_v2::CgroupV2Collector;
 pub use discovery::{
     discover_existing_containers, ContainerEvent, ContainerRegistry, ContainerWatcher,

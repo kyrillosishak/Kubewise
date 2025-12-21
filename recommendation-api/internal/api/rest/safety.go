@@ -219,17 +219,17 @@ func getRecommendationOutcomeHandler(c *gin.Context) {
 
 	if safetyStore == nil {
 		c.JSON(http.StatusOK, RecommendationOutcome{
-			ID:               "mock-outcome-id",
-			RecommendationID: id,
-			Namespace:        "default",
-			Deployment:       "example",
-			AppliedAt:        time.Now().Add(-1 * time.Hour),
-			CheckTime:        time.Now(),
-			OOMKillsBefore:   0,
-			OOMKillsAfter:    0,
+			ID:                "mock-outcome-id",
+			RecommendationID:  id,
+			Namespace:         "default",
+			Deployment:        "example",
+			AppliedAt:         time.Now().Add(-1 * time.Hour),
+			CheckTime:         time.Now(),
+			OOMKillsBefore:    0,
+			OOMKillsAfter:     0,
 			CPUThrottleBefore: 0.0,
 			CPUThrottleAfter:  0.0,
-			OutcomeStatus:    "monitoring",
+			OutcomeStatus:     "monitoring",
 			RollbackTriggered: false,
 		})
 		return

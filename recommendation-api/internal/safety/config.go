@@ -10,13 +10,13 @@ import (
 
 // NamespaceConfig holds safety configuration for a namespace
 type NamespaceConfig struct {
-	Namespace                       string    `json:"namespace"`
-	DryRunEnabled                   bool      `json:"dry_run_enabled"`
-	AutoApproveEnabled              bool      `json:"auto_approve_enabled"`
+	Namespace                        string    `json:"namespace"`
+	DryRunEnabled                    bool      `json:"dry_run_enabled"`
+	AutoApproveEnabled               bool      `json:"auto_approve_enabled"`
 	HighRiskThresholdMemoryReduction float64   `json:"high_risk_threshold_memory_reduction"`
-	HighRiskThresholdCPUReduction   float64   `json:"high_risk_threshold_cpu_reduction"`
-	CreatedAt                       time.Time `json:"created_at"`
-	UpdatedAt                       time.Time `json:"updated_at"`
+	HighRiskThresholdCPUReduction    float64   `json:"high_risk_threshold_cpu_reduction"`
+	CreatedAt                        time.Time `json:"created_at"`
+	UpdatedAt                        time.Time `json:"updated_at"`
 }
 
 // ConfigStore handles namespace configuration persistence

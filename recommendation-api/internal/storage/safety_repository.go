@@ -380,7 +380,6 @@ func (r *SafetyRepository) storeDryRunResult(ctx context.Context, recommendation
 // Ensure SafetyRepository implements rest.SafetyStore interface
 var _ rest.SafetyStore = (*SafetyRepository)(nil)
 
-
 // ApproveRecommendationWithDetails approves a recommendation with approver details
 func (r *SafetyRepository) ApproveRecommendationWithDetails(ctx context.Context, id string, approver string, reason string) (*rest.ApproveRecommendationResponse, error) {
 	tx, err := r.db.BeginTx(ctx, nil)

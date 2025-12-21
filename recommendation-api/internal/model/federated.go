@@ -114,7 +114,6 @@ func (f *FederatedAggregator) GetPendingGradients(ctx context.Context, modelVers
 	return updates, rows.Err()
 }
 
-
 // AggregateGradients performs FedAvg aggregation on pending gradients
 func (f *FederatedAggregator) AggregateGradients(ctx context.Context, modelVersion string) (*AggregationResult, error) {
 	f.mu.Lock()

@@ -155,7 +155,6 @@ func (r *Repository) GetRecommendationByID(ctx context.Context, id string) (*res
 	return &rec, nil
 }
 
-
 // ApplyRecommendation applies a recommendation
 func (r *Repository) ApplyRecommendation(ctx context.Context, id string, dryRun bool) (*rest.ApplyRecommendationResponse, error) {
 	rec, err := r.GetRecommendationByID(ctx, id)
@@ -286,9 +285,9 @@ func (r *Repository) GetNamespaceCosts(ctx context.Context, namespace string) (*
 	)
 	if err == sql.ErrNoRows {
 		return &rest.CostAnalysis{
-			Namespace:    namespace,
-			Currency:     "USD",
-			LastUpdated:  time.Now(),
+			Namespace:   namespace,
+			Currency:    "USD",
+			LastUpdated: time.Now(),
 		}, nil
 	}
 	if err != nil {
@@ -338,7 +337,6 @@ func (r *Repository) GetSavingsReport(ctx context.Context, since string) (*rest.
 
 	return &report, rows.Err()
 }
-
 
 // ListModels returns all model versions
 func (r *Repository) ListModels(ctx context.Context) ([]rest.ModelVersion, error) {

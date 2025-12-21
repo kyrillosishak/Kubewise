@@ -40,10 +40,10 @@ impl Default for ModelUpdateConfig {
     fn default() -> Self {
         Self {
             model_dir: PathBuf::from("/var/lib/predictor/models"),
-            update_window_start: 2,  // 02:00
-            update_window_end: 4,    // 04:00
+            update_window_start: 2,                   // 02:00
+            update_window_end: 4,                     // 04:00
             poll_interval: Duration::from_secs(3600), // 1 hour
-            max_model_size: 100 * 1024, // 100KB
+            max_model_size: 100 * 1024,               // 100KB
             versions_to_keep: 5,
             max_deviation_threshold: 0.20, // 20%
         }
@@ -101,12 +101,20 @@ impl ModelUpdateClient {
 
     /// Get current model version
     pub async fn current_version(&self) -> Option<String> {
-        self.current_version.read().await.as_ref().map(|v| v.version.clone())
+        self.current_version
+            .read()
+            .await
+            .as_ref()
+            .map(|v| v.version.clone())
     }
 
     /// Get current model path
     pub async fn current_model_path(&self) -> Option<PathBuf> {
-        self.current_version.read().await.as_ref().map(|v| v.path.clone())
+        self.current_version
+            .read()
+            .await
+            .as_ref()
+            .map(|v| v.path.clone())
     }
 
     /// Check for and download model updates
@@ -179,7 +187,10 @@ impl ModelUpdateClient {
         );
 
         // Save model to disk
-        let model_path = self.config.model_dir.join(format!("model_{}.onnx", response.new_version));
+        let model_path = self
+            .config
+            .model_dir
+            .join(format!("model_{}.onnx", response.new_version));
         self.save_model(&model_path, &response.model_weights)?;
 
         // Create version info
@@ -236,8 +247,7 @@ impl ModelUpdateClient {
 
         file.write_all(weights)
             .context("Failed to write model weights")?;
-        file.sync_all()
-            .context("Failed to sync model file")?;
+        file.sync_all().context("Failed to sync model file")?;
 
         // Rename to final path
         fs::rename(&temp_path, path)
@@ -327,8 +337,8 @@ impl ModelUpdateClient {
             return Err(anyhow::anyhow!("Model file not found: {:?}", path));
         }
 
-        let weights = fs::read(path)
-            .with_context(|| format!("Failed to read model file {:?}", path))?;
+        let weights =
+            fs::read(path).with_context(|| format!("Failed to read model file {:?}", path))?;
 
         let checksum = compute_checksum(&weights);
 

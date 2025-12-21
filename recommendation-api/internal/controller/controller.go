@@ -11,11 +11,11 @@ import (
 
 // Controller manages ResourceRecommendation CRD reconciliation
 type Controller struct {
-	mu             sync.RWMutex
+	mu              sync.RWMutex
 	recommendations map[string]*ResourceRecommendation
-	patchGenerator *PatchGenerator
-	logger         *slog.Logger
-	
+	patchGenerator  *PatchGenerator
+	logger          *slog.Logger
+
 	// Callbacks for integration
 	onApply    func(ctx context.Context, rec *ResourceRecommendation) error
 	onRollback func(ctx context.Context, rec *ResourceRecommendation) error
@@ -97,7 +97,7 @@ func (c *Controller) reconcilePending(ctx context.Context, rec *ResourceRecommen
 	// Check risk level for high-risk recommendations
 	if rec.Spec.RiskLevel == RiskLevelHigh {
 		rec.Spec.RequiresApproval = true
-		c.setCondition(rec, ConditionTypeApproved, "False", "HighRisk", 
+		c.setCondition(rec, ConditionTypeApproved, "False", "HighRisk",
 			"High-risk recommendation requires manual approval")
 	}
 
@@ -105,7 +105,7 @@ func (c *Controller) reconcilePending(ctx context.Context, rec *ResourceRecommen
 	now := time.Now()
 	rec.Status.LastUpdated = &now
 	rec.Status.Message = "Waiting for approval"
-	
+
 	c.store(rec)
 	return nil
 }
@@ -124,8 +124,8 @@ func (c *Controller) reconcileApproved(ctx context.Context, rec *ResourceRecomme
 	rec.Status.AppliedAt = &now
 	rec.Status.LastUpdated = &now
 	rec.Status.Message = "Recommendation applied successfully"
-	
-	c.setCondition(rec, ConditionTypeApplied, "True", "Applied", 
+
+	c.setCondition(rec, ConditionTypeApplied, "True", "Applied",
 		"Recommendation has been applied to the workload")
 
 	c.logger.Info("recommendation applied",
@@ -148,7 +148,7 @@ func (c *Controller) reconcileApplied(ctx context.Context, rec *ResourceRecommen
 				"name", rec.Name,
 				"oomKills", rec.Status.Outcome.OOMKills,
 			)
-			
+
 			// Auto-rollback if OOM kills detected
 			return c.rollback(ctx, rec, "Auto-rollback due to OOM kills")
 		}
@@ -213,7 +213,7 @@ func (c *Controller) approve(ctx context.Context, rec *ResourceRecommendation, a
 	)
 
 	c.store(rec)
-	
+
 	// Trigger reconciliation to apply
 	return c.Reconcile(ctx, rec)
 }
@@ -310,7 +310,7 @@ func (c *Controller) UpdateOutcome(namespace, name string, outcome *Outcome) err
 // Create creates a new ResourceRecommendation
 func (c *Controller) Create(rec *ResourceRecommendation) error {
 	key := c.key(rec.Namespace, rec.Name)
-	
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -339,7 +339,7 @@ func (c *Controller) Create(rec *ResourceRecommendation) error {
 // Get retrieves a ResourceRecommendation
 func (c *Controller) Get(namespace, name string) (*ResourceRecommendation, error) {
 	key := c.key(namespace, name)
-	
+
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -368,7 +368,7 @@ func (c *Controller) List(namespace string) []*ResourceRecommendation {
 // Delete deletes a ResourceRecommendation
 func (c *Controller) Delete(namespace, name string) error {
 	key := c.key(namespace, name)
-	
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -391,7 +391,7 @@ func (c *Controller) store(rec *ResourceRecommendation) {
 // setCondition sets or updates a condition on the recommendation
 func (c *Controller) setCondition(rec *ResourceRecommendation, condType, status, reason, message string) {
 	now := time.Now()
-	
+
 	// Find existing condition
 	for i, cond := range rec.Status.Conditions {
 		if cond.Type == condType {
@@ -428,7 +428,7 @@ func (c *Controller) updateStatusFailed(rec *ResourceRecommendation, message str
 	)
 
 	c.store(rec)
-	return fmt.Errorf(message)
+	return fmt.Errorf("%s", message)
 }
 
 // ToJSON serializes a recommendation to JSON

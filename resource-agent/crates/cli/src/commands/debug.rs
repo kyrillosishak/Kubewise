@@ -83,46 +83,52 @@ pub async fn show_predictions(
 }
 
 /// Show agent status on a node
-pub async fn show_agent_status(
-    client: &ApiClient,
-    node: &str,
-    format: OutputFormat,
-) -> Result<()> {
+pub async fn show_agent_status(client: &ApiClient, node: &str, format: OutputFormat) -> Result<()> {
     // Try to get agent status from the API
     // Note: This endpoint may need to be added to the API
     let path = format!("api/v1/agents/{}", node);
-    
+
     // For now, we'll try to get the status and handle the case where
     // the endpoint doesn't exist yet
     let result: Result<AgentStatus, _> = client.get(&path).await;
 
     match result {
-        Ok(status) => {
-            match format {
-                OutputFormat::Json => {
-                    let json = serde_json::to_string_pretty(&status)?;
-                    println!("{}", json);
-                }
-                OutputFormat::Table => {
-                    println!("{}", "Agent Status".bold());
-                    println!("{}", "=".repeat(50));
-                    println!("Node:                   {}", status.node.cyan());
-                    println!("Status:                 {}", color_status(&status.status));
-                    println!("Last Seen:              {}", format_timestamp(&status.last_seen));
-                    println!();
-                    println!("{}", "Metrics".bold());
-                    println!("{}", "-".repeat(50));
-                    println!("Containers Monitored:   {}", status.containers_monitored);
-                    println!("Model Version:          {}", status.model_version);
-                    println!("Buffer Size:            {}", format_bytes(status.buffer_size_bytes));
-                    println!();
-                    println!("{}", "Performance".bold());
-                    println!("{}", "-".repeat(50));
-                    println!("Collection Latency:     {:.2}ms", status.collection_latency_ms);
-                    println!("Prediction Latency:     {:.2}ms", status.prediction_latency_ms);
-                }
+        Ok(status) => match format {
+            OutputFormat::Json => {
+                let json = serde_json::to_string_pretty(&status)?;
+                println!("{}", json);
             }
-        }
+            OutputFormat::Table => {
+                println!("{}", "Agent Status".bold());
+                println!("{}", "=".repeat(50));
+                println!("Node:                   {}", status.node.cyan());
+                println!("Status:                 {}", color_status(&status.status));
+                println!(
+                    "Last Seen:              {}",
+                    format_timestamp(&status.last_seen)
+                );
+                println!();
+                println!("{}", "Metrics".bold());
+                println!("{}", "-".repeat(50));
+                println!("Containers Monitored:   {}", status.containers_monitored);
+                println!("Model Version:          {}", status.model_version);
+                println!(
+                    "Buffer Size:            {}",
+                    format_bytes(status.buffer_size_bytes)
+                );
+                println!();
+                println!("{}", "Performance".bold());
+                println!("{}", "-".repeat(50));
+                println!(
+                    "Collection Latency:     {:.2}ms",
+                    status.collection_latency_ms
+                );
+                println!(
+                    "Prediction Latency:     {:.2}ms",
+                    status.prediction_latency_ms
+                );
+            }
+        },
         Err(_) => {
             // Endpoint might not exist, provide helpful message
             print_warning(&format!(

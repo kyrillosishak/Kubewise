@@ -42,13 +42,13 @@ type RecommendationOutcome struct {
 
 // OutcomeMetrics represents metrics collected for outcome tracking
 type OutcomeMetrics struct {
-	Namespace     string    `json:"namespace"`
-	Deployment    string    `json:"deployment"`
-	OOMKills      int       `json:"oom_kills"`
-	CPUThrottle   float64   `json:"cpu_throttle"`
-	MemoryUsageP95 int64    `json:"memory_usage_p95"`
-	CPUUsageP95   float64   `json:"cpu_usage_p95"`
-	CollectedAt   time.Time `json:"collected_at"`
+	Namespace      string    `json:"namespace"`
+	Deployment     string    `json:"deployment"`
+	OOMKills       int       `json:"oom_kills"`
+	CPUThrottle    float64   `json:"cpu_throttle"`
+	MemoryUsageP95 int64     `json:"memory_usage_p95"`
+	CPUUsageP95    float64   `json:"cpu_usage_p95"`
+	CollectedAt    time.Time `json:"collected_at"`
 }
 
 // OutcomeService handles outcome tracking operations

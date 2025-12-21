@@ -41,14 +41,14 @@ func NewDistributor(db *sql.DB, repo *Repository) *Distributor {
 
 // ModelDeployment represents a model deployment to an agent
 type ModelDeployment struct {
-	ID              string           `json:"id"`
-	ModelVersion    string           `json:"model_version"`
-	AgentID         string           `json:"agent_id"`
-	DeployedAt      time.Time        `json:"deployed_at"`
-	Status          DeploymentStatus `json:"status"`
-	ValidationPassed *bool           `json:"validation_passed,omitempty"`
-	ValidationError  *string         `json:"validation_error,omitempty"`
-	PreviousVersion  *string         `json:"previous_version,omitempty"`
+	ID               string           `json:"id"`
+	ModelVersion     string           `json:"model_version"`
+	AgentID          string           `json:"agent_id"`
+	DeployedAt       time.Time        `json:"deployed_at"`
+	Status           DeploymentStatus `json:"status"`
+	ValidationPassed *bool            `json:"validation_passed,omitempty"`
+	ValidationError  *string          `json:"validation_error,omitempty"`
+	PreviousVersion  *string          `json:"previous_version,omitempty"`
 }
 
 // GetModelForAgent returns the model weights for an agent
@@ -100,7 +100,6 @@ type ModelUpdate struct {
 	ValidationAccuracy float32   `json:"validation_accuracy"`
 	CreatedAt          time.Time `json:"created_at"`
 }
-
 
 // GetIncrementalUpdate returns an incremental model update (delta) if available
 // This is more efficient for small model changes

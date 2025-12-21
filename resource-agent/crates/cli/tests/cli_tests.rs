@@ -11,9 +11,12 @@ fn test_cli_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "CLI help should succeed");
-    assert!(stdout.contains("Container Resource Predictor"), "Should show app name");
+    assert!(
+        stdout.contains("Container Resource Predictor"),
+        "Should show app name"
+    );
     assert!(stdout.contains("get"), "Should show get command");
     assert!(stdout.contains("apply"), "Should show apply command");
     assert!(stdout.contains("approve"), "Should show approve command");
@@ -30,7 +33,7 @@ fn test_cli_version() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "CLI version should succeed");
     assert!(stdout.contains("crp"), "Should show binary name");
 }
@@ -39,15 +42,32 @@ fn test_cli_version() {
 #[test]
 fn test_get_recommendations_help() {
     let output = Command::new("cargo")
-        .args(["run", "-p", "crp-cli", "--", "get", "recommendations", "--help"])
+        .args([
+            "run",
+            "-p",
+            "crp-cli",
+            "--",
+            "get",
+            "recommendations",
+            "--help",
+        ])
         .output()
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
-    assert!(output.status.success(), "Get recommendations help should succeed");
-    assert!(stdout.contains("--namespace"), "Should show namespace option");
-    assert!(stdout.contains("--deployment"), "Should show deployment option");
+
+    assert!(
+        output.status.success(),
+        "Get recommendations help should succeed"
+    );
+    assert!(
+        stdout.contains("--namespace"),
+        "Should show namespace option"
+    );
+    assert!(
+        stdout.contains("--deployment"),
+        "Should show deployment option"
+    );
 }
 
 /// Test get models subcommand help
@@ -59,9 +79,12 @@ fn test_get_models_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Get models help should succeed");
-    assert!(stdout.contains("--active-only"), "Should show active-only option");
+    assert!(
+        stdout.contains("--active-only"),
+        "Should show active-only option"
+    );
 }
 
 /// Test apply command help
@@ -73,7 +96,7 @@ fn test_apply_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Apply help should succeed");
     assert!(stdout.contains("--dry-run"), "Should show dry-run option");
 }
@@ -87,7 +110,7 @@ fn test_approve_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Approve help should succeed");
     assert!(stdout.contains("--approver"), "Should show approver option");
     assert!(stdout.contains("--reason"), "Should show reason option");
@@ -102,9 +125,12 @@ fn test_costs_show_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Costs show help should succeed");
-    assert!(stdout.contains("--namespace"), "Should show namespace option");
+    assert!(
+        stdout.contains("--namespace"),
+        "Should show namespace option"
+    );
 }
 
 /// Test costs savings subcommand help
@@ -116,7 +142,7 @@ fn test_costs_savings_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Costs savings help should succeed");
     assert!(stdout.contains("--since"), "Should show since option");
 }
@@ -125,14 +151,28 @@ fn test_costs_savings_help() {
 #[test]
 fn test_debug_predictions_help() {
     let output = Command::new("cargo")
-        .args(["run", "-p", "crp-cli", "--", "debug", "predictions", "--help"])
+        .args([
+            "run",
+            "-p",
+            "crp-cli",
+            "--",
+            "debug",
+            "predictions",
+            "--help",
+        ])
         .output()
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
-    assert!(output.status.success(), "Debug predictions help should succeed");
-    assert!(stdout.contains("deployment"), "Should show deployment argument");
+
+    assert!(
+        output.status.success(),
+        "Debug predictions help should succeed"
+    );
+    assert!(
+        stdout.contains("deployment"),
+        "Should show deployment argument"
+    );
 }
 
 /// Test debug agent subcommand help
@@ -144,7 +184,7 @@ fn test_debug_agent_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Debug agent help should succeed");
     assert!(stdout.contains("node"), "Should show node argument");
 }
@@ -158,11 +198,14 @@ fn test_debug_export_help() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(output.status.success(), "Debug export help should succeed");
     assert!(stdout.contains("--since"), "Should show since option");
     assert!(stdout.contains("--output"), "Should show output option");
-    assert!(stdout.contains("--namespace"), "Should show namespace option");
+    assert!(
+        stdout.contains("--namespace"),
+        "Should show namespace option"
+    );
 }
 
 /// Test format option
@@ -174,7 +217,7 @@ fn test_format_option() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(stdout.contains("--format"), "Should show format option");
     assert!(stdout.contains("table"), "Should show table format");
     assert!(stdout.contains("json"), "Should show json format");
@@ -189,7 +232,7 @@ fn test_api_url_option() {
         .expect("Failed to execute command");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(stdout.contains("--api-url"), "Should show api-url option");
     assert!(stdout.contains("CRP_API_URL"), "Should show env var");
 }
@@ -203,7 +246,7 @@ fn test_invalid_command() {
         .expect("Failed to execute command");
 
     assert!(!output.status.success(), "Invalid command should fail");
-    
+
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         stderr.contains("error") || stderr.contains("invalid"),
@@ -220,7 +263,7 @@ fn test_missing_argument() {
         .expect("Failed to execute command");
 
     assert!(!output.status.success(), "Missing argument should fail");
-    
+
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         stderr.contains("required") || stderr.contains("error"),

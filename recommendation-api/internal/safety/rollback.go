@@ -34,19 +34,19 @@ type RollbackEvent struct {
 
 // RollbackConfig holds configuration for automatic rollback
 type RollbackConfig struct {
-	MonitoringWindow      time.Duration `json:"monitoring_window"`       // How long to monitor after application
-	OOMKillThreshold      int           `json:"oom_kill_threshold"`      // Number of OOM kills to trigger rollback
-	ThrottleIncreaseThreshold float64   `json:"throttle_increase_threshold"` // Percentage increase to trigger rollback
-	AutoRollbackEnabled   bool          `json:"auto_rollback_enabled"`
+	MonitoringWindow          time.Duration `json:"monitoring_window"`           // How long to monitor after application
+	OOMKillThreshold          int           `json:"oom_kill_threshold"`          // Number of OOM kills to trigger rollback
+	ThrottleIncreaseThreshold float64       `json:"throttle_increase_threshold"` // Percentage increase to trigger rollback
+	AutoRollbackEnabled       bool          `json:"auto_rollback_enabled"`
 }
 
 // DefaultRollbackConfig returns the default rollback configuration
 func DefaultRollbackConfig() *RollbackConfig {
 	return &RollbackConfig{
-		MonitoringWindow:         time.Hour,
-		OOMKillThreshold:         1, // Any OOM kill triggers rollback
+		MonitoringWindow:          time.Hour,
+		OOMKillThreshold:          1,    // Any OOM kill triggers rollback
 		ThrottleIncreaseThreshold: 0.25, // 25% increase in throttling
-		AutoRollbackEnabled:      true,
+		AutoRollbackEnabled:       true,
 	}
 }
 
