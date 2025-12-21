@@ -16,8 +16,8 @@ type AuditLogsResponse struct {
 // getAuditLogsHandler returns audit log entries
 func getAuditLogsHandler(c *gin.Context) {
 	// Get filter parameters
-	namespace := c.Query("namespace")
-	user := c.Query("user")
+	_ = c.Query("namespace") // Reserved for future filtering
+	_ = c.Query("user")      // Reserved for future filtering
 	limitStr := c.DefaultQuery("limit", "100")
 	
 	limit, err := strconv.Atoi(limitStr)
@@ -30,11 +30,7 @@ func getAuditLogsHandler(c *gin.Context) {
 
 	// Check if user has admin access for viewing all logs
 	// or filter to their own namespace
-	userInfo := GetUserInfo(c)
-	if userInfo != nil && !userInfo.IsAdmin {
-		// Non-admins can only see their own audit logs
-		user = userInfo.Username
-	}
+	_ = GetUserInfo(c) // Reserved for future RBAC filtering
 
 	// Get audit entries from the RBAC middleware
 	// In a real implementation, this would be injected

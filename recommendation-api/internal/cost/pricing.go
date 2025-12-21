@@ -61,7 +61,14 @@ type ResourceRates struct {
 }
 
 // DefaultPricingConfigs provides default pricing for major cloud providers
-var DefaultPricingConfigs = map[CloudProvider]PricingConfig{
+// Note: These are template configs without mutex - NewPricingConfig creates proper instances
+var DefaultPricingConfigs = map[CloudProvider]struct {
+	Provider             CloudProvider
+	Region               string
+	Currency             string
+	CPUPricePerCoreHour  float64
+	MemoryPricePerGBHour float64
+}{
 	ProviderAWS: {
 		Provider:             ProviderAWS,
 		Region:               "us-east-1",
@@ -96,10 +103,15 @@ var DefaultPricingConfigs = map[CloudProvider]PricingConfig{
 // NewPricingConfig creates a new pricing configuration with defaults
 func NewPricingConfig(provider CloudProvider) *PricingConfig {
 	if defaultConfig, ok := DefaultPricingConfigs[provider]; ok {
-		config := defaultConfig
-		config.InstanceTypes = make(map[string]InstancePricing)
-		config.CustomRates = make(map[string]ResourceRates)
-		return &config
+		return &PricingConfig{
+			Provider:             defaultConfig.Provider,
+			Region:               defaultConfig.Region,
+			Currency:             defaultConfig.Currency,
+			CPUPricePerCoreHour:  defaultConfig.CPUPricePerCoreHour,
+			MemoryPricePerGBHour: defaultConfig.MemoryPricePerGBHour,
+			InstanceTypes:        make(map[string]InstancePricing),
+			CustomRates:          make(map[string]ResourceRates),
+		}
 	}
 
 	// Return custom provider with zero rates (must be configured)

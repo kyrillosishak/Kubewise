@@ -4,13 +4,7 @@ use agent_lib::{
     health::{ComponentStatus, HealthRegistry},
     observability::AgentMetrics,
 };
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use prometheus::{Encoder, TextEncoder};
 use std::sync::Arc;
 use tracing::info;

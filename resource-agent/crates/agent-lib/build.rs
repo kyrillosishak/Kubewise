@@ -11,8 +11,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=../../../proto/predictor/v1/predictor.proto");
 
     // Check if protoc is available
-    let protoc_available = std::env::var("PROTOC").is_ok()
-        || Command::new("protoc").arg("--version").output().is_ok();
+    let protoc_available =
+        std::env::var("PROTOC").is_ok() || Command::new("protoc").arg("--version").output().is_ok();
 
     if !protoc_available {
         println!("cargo:warning=protoc not found, skipping proto generation");

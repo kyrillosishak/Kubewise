@@ -127,6 +127,7 @@ jobs:
           helm upgrade --install kubewise-test charts/kubewise-test \
             --namespace ${{ env.TEST_NAMESPACE }} \
             --create-namespace \
+            --set createNamespace=false \
             --set patternController.enabled=true \
             --set memoryHog.enabled=true \
             --set cpuBurster.enabled=true \

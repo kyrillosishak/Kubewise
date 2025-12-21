@@ -102,7 +102,6 @@ pub struct EventSource {
     pub host: Option<String>,
 }
 
-
 /// Alertmanager webhook alert format
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -321,7 +320,6 @@ impl Alerter {
         self.record_alert(&AlertType::CpuSpike, ctx);
         Some(event)
     }
-
 
     /// Create an Alertmanager alert for a memory leak
     pub fn create_leak_alertmanager_alert(
