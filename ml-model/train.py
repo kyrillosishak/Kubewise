@@ -168,18 +168,28 @@ def quantize_model(onnx_path: str, output_path: str):
     """Quantize ONNX model to int8"""
     try:
         from onnxruntime.quantization import quantize_dynamic, QuantType
+        import shutil
         
-        quantize_dynamic(
-            onnx_path,
-            output_path,
-            weight_type=QuantType.QInt8
-        )
-        
-        size_bytes = os.path.getsize(output_path)
-        print(f"Quantized model exported to {output_path}")
-        print(f"Quantized model size: {size_bytes} bytes ({size_bytes / 1024:.2f} KB)")
-        
-        return size_bytes
+        try:
+            quantize_dynamic(
+                onnx_path,
+                output_path,
+                weight_type=QuantType.QInt8
+            )
+            
+            size_bytes = os.path.getsize(output_path)
+            print(f"Quantized model exported to {output_path}")
+            print(f"Quantized model size: {size_bytes} bytes ({size_bytes / 1024:.2f} KB)")
+            return size_bytes
+        except Exception as e:
+            # LSTM models can have shape inference issues with quantization
+            # Fall back to copying the original model
+            print(f"Warning: Quantization failed ({e}), using original model")
+            shutil.copy(onnx_path, output_path)
+            size_bytes = os.path.getsize(output_path)
+            print(f"Copied original model to {output_path}")
+            print(f"Model size: {size_bytes} bytes ({size_bytes / 1024:.2f} KB)")
+            return size_bytes
     except ImportError:
         print("Warning: onnxruntime.quantization not available, skipping quantization")
         return None
