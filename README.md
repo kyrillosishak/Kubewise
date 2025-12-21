@@ -24,29 +24,29 @@ Kubewise solves this by:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Kubernetes Cluster                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                          │
-│  │  Node 1  │  │  Node 2  │  │  Node 3  │                          │
-│  │ ┌──────┐ │  │ ┌──────┐ │  │ ┌──────┐ │                          │
-│  │ │Agent │ │  │ │Agent │ │  │ │Agent │ │  Collect metrics         │
-│  │ └──┬───┘ │  │ └──┬───┘ │  │ └──┬───┘ │  Run local inference     │
-│  └────┼─────┘  └────┼─────┘  └────┼─────┘  Detect anomalies        │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  Node 1  │  │  Node 2  │  │  Node 3  │                           │
+│  │ ┌──────┐ │  │ ┌──────┐ │  │ ┌──────┐ │                           │
+│  │ │Agent │ │  │ │Agent │ │  │ │Agent │ │  Collect metrics          │
+│  │ └──┬───┘ │  │ └──┬───┘ │  │ └──┬───┘ │  Run local inference      │
+│  └────┼─────┘  └────┼─────┘  └────┼─────┘  Detect anomalies         │
 │       │             │             │                                 │
 │       └─────────────┼─────────────┘                                 │
 │                     │ gRPC streaming                                │
 │                     ▼                                               │
-│            ┌────────────────┐                                       │
-│            │ Kubewise API   │  Aggregate predictions                │
-│            │                │  Federated learning                   │
-│            │  ┌──────────┐  │  Cost analysis                        │
-│            │  │TimescaleDB│  │  Safety controls                     │
-│            │  └──────────┘  │                                       │
-│            └───────┬────────┘                                       │
+│            ┌─────────────────┐                                      │
+│            │ Kubewise API    │  Aggregate predictions               │
+│            │                 │  Federated learning                  │
+│            │  ┌────────────┐ │  Cost analysis                       │
+│            │  │TimescaleDB │ │  Safety controls                     │
+│            │  └────────────┘ │                                      │
+│            └───────┬─────────┘                                      │
 │                    │                                                │
 │                    ▼                                                │
-│         ┌─────────────────────┐                                     │
+│         ┌──────────────────────┐                                    │
 │         │ResourceRecommendation│  Kubernetes CRD                    │
 │         │        CRDs          │  GitOps friendly                   │
-│         └─────────────────────┘                                     │
+│         └──────────────────────┘                                    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
