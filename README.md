@@ -4,7 +4,7 @@
 
 Kubewise automatically analyzes your container workloads and provides ML-powered resource recommendations that reduce costs while preventing OOM kills and CPU throttling.
 
-[![CI](https://github.com/example/kubewise/actions/workflows/ci.yaml/badge.svg)](https://github.com/example/kubewise/actions/workflows/ci.yaml)
+[![CI](https://github.com/kyrillosishak/kubewise/actions/workflows/ci.yaml/badge.svg)](https://github.com/example/kubewise/actions/workflows/ci.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ## Why Kubewise?
