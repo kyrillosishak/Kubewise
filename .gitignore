@@ -1,0 +1,45 @@
+# Rust
+resource-agent/target/
+**/*.rs.bk
+Cargo.lock
+
+# Go
+recommendation-api/bin/
+recommendation-api/coverage.out
+recommendation-api/coverage.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+
+# Docker
+.docker/
+
+# Kubernetes
+*.kubeconfig
+
+# Environment
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
