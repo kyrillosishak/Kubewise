@@ -48,6 +48,10 @@ func main() {
 	rest.SetAnomalyStore(anomalyStore)
 	slog.Info("Anomaly store initialized")
 
+	// Create agent store that bridges gRPC agents to REST stores
+	agentStore := storage.NewInMemoryAgentStore(clusterStore, anomalyStore)
+	slog.Info("Agent store initialized - clusters will appear when resource agents connect")
+
 	// Set up Gin router
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -93,6 +97,7 @@ func main() {
 		KeyFile:           cfg.TLSKeyFile,
 		CAFile:            cfg.TLSCAFile,
 		RateLimitPerAgent: cfg.RateLimitPerAgent,
+		AgentStore:        agentStore,
 	}
 
 	grpcServer, err := grpcapi.NewServer(grpcConfig)

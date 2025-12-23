@@ -16,51 +16,11 @@ type InMemoryClusterStore struct {
 	mu       sync.RWMutex
 }
 
-// NewInMemoryClusterStore creates a new in-memory cluster store with demo data
+// NewInMemoryClusterStore creates a new in-memory cluster store
 func NewInMemoryClusterStore() *InMemoryClusterStore {
-	store := &InMemoryClusterStore{
+	return &InMemoryClusterStore{
 		clusters: make(map[string]*rest.Cluster),
 	}
-
-	// Add demo clusters
-	demoClusters := []*rest.Cluster{
-		{
-			ID:                   "kind-kubewise",
-			Name:                 "kind-kubewise",
-			Status:               "healthy",
-			ContainersMonitored:  24,
-			PredictionsGenerated: 156,
-			AnomaliesDetected:    3,
-			ModelVersion:         "v1.2.0",
-			LastSeen:             time.Now(),
-		},
-		{
-			ID:                   "production-us-east",
-			Name:                 "production-us-east",
-			Status:               "healthy",
-			ContainersMonitored:  128,
-			PredictionsGenerated: 1024,
-			AnomaliesDetected:    7,
-			ModelVersion:         "v1.2.0",
-			LastSeen:             time.Now(),
-		},
-		{
-			ID:                   "staging-cluster",
-			Name:                 "staging-cluster",
-			Status:               "degraded",
-			ContainersMonitored:  45,
-			PredictionsGenerated: 312,
-			AnomaliesDetected:    12,
-			ModelVersion:         "v1.1.0",
-			LastSeen:             time.Now().Add(-5 * time.Minute),
-		},
-	}
-
-	for _, c := range demoClusters {
-		store.clusters[c.ID] = c
-	}
-
-	return store
 }
 
 // ListClusters returns all clusters

@@ -16,76 +16,11 @@ type InMemoryAnomalyStore struct {
 	mu        sync.RWMutex
 }
 
-// NewInMemoryAnomalyStore creates a new in-memory anomaly store with demo data
+// NewInMemoryAnomalyStore creates a new in-memory anomaly store
 func NewInMemoryAnomalyStore() *InMemoryAnomalyStore {
-	store := &InMemoryAnomalyStore{
+	return &InMemoryAnomalyStore{
 		anomalies: make(map[string]*rest.AnomalyDetail),
 	}
-
-	// Add demo anomalies
-	now := time.Now()
-	demoAnomalies := []*rest.AnomalyDetail{
-		{
-			Anomaly: rest.Anomaly{
-				ID:         "anomaly-001",
-				Type:       rest.AnomalyTypeMemoryLeak,
-				Severity:   rest.AnomalySeverityWarning,
-				Namespace:  "default",
-				Deployment: "api-server",
-				Container:  "api",
-				DetectedAt: now.Add(-2 * time.Hour),
-				Status:     "active",
-			},
-			Metrics: []rest.AnomalyMetric{
-				{Timestamp: now.Add(-2 * time.Hour), Value: 512, Threshold: 450},
-				{Timestamp: now.Add(-1 * time.Hour), Value: 580, Threshold: 450},
-				{Timestamp: now, Value: 620, Threshold: 450},
-			},
-			RelatedRecommendations: []string{"rec-001"},
-		},
-		{
-			Anomaly: rest.Anomaly{
-				ID:         "anomaly-002",
-				Type:       rest.AnomalyTypeCPUSpike,
-				Severity:   rest.AnomalySeverityCritical,
-				Namespace:  "production",
-				Deployment: "worker",
-				Container:  "processor",
-				DetectedAt: now.Add(-30 * time.Minute),
-				Status:     "active",
-			},
-			Metrics: []rest.AnomalyMetric{
-				{Timestamp: now.Add(-30 * time.Minute), Value: 95, Threshold: 80},
-				{Timestamp: now.Add(-15 * time.Minute), Value: 98, Threshold: 80},
-				{Timestamp: now, Value: 92, Threshold: 80},
-			},
-			RelatedRecommendations: []string{"rec-002"},
-		},
-		{
-			Anomaly: rest.Anomaly{
-				ID:         "anomaly-003",
-				Type:       rest.AnomalyTypeOOMRisk,
-				Severity:   rest.AnomalySeverityCritical,
-				Namespace:  "kubewise-test",
-				Deployment: "memory-hog",
-				Container:  "memory-hog",
-				DetectedAt: now.Add(-10 * time.Minute),
-				Status:     "active",
-			},
-			Metrics: []rest.AnomalyMetric{
-				{Timestamp: now.Add(-10 * time.Minute), Value: 890, Threshold: 800},
-				{Timestamp: now.Add(-5 * time.Minute), Value: 920, Threshold: 800},
-				{Timestamp: now, Value: 950, Threshold: 800},
-			},
-			RelatedRecommendations: []string{},
-		},
-	}
-
-	for _, a := range demoAnomalies {
-		store.anomalies[a.ID] = a
-	}
-
-	return store
 }
 
 // ListAnomalies returns anomalies matching the filters
