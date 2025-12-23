@@ -11,9 +11,19 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/healthz", healthzHandler)
 	r.GET("/readyz", readyzHandler)
 
-	// API v1 routes
-	v1 := r.Group("/api/v1")
+	// Auth endpoints (public)
+	auth := r.Group("/api/auth")
 	{
+		auth.POST("/login", loginHandler)
+	}
+
+	// API v1 routes (protected)
+	v1 := r.Group("/api/v1")
+	v1.Use(AuthMiddleware())
+	{
+		// Auth - get current user
+		v1.GET("/auth/me", meHandler)
+
 		// Recommendations - list and namespace-scoped
 		recommendations := v1.Group("/recommendations")
 		{
@@ -41,6 +51,20 @@ func RegisterRoutes(r *gin.Engine) {
 
 		// Savings
 		v1.GET("/savings", getSavingsHandler)
+
+		// Clusters
+		clusters := v1.Group("/clusters")
+		{
+			clusters.GET("", listClustersHandler)
+			clusters.GET("/:id/health", getClusterHealthHandler)
+		}
+
+		// Anomalies
+		anomalies := v1.Group("/anomalies")
+		{
+			anomalies.GET("", listAnomaliesHandler)
+			anomalies.GET("/:id", getAnomalyDetailHandler)
+		}
 
 		// Models
 		models := v1.Group("/models")

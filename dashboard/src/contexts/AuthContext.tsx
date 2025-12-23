@@ -78,7 +78,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       dispatch(setLoading(true))
       try {
-        const response = await apiClient.get<{ user: User; permissions: Permission[] }>('/auth/me')
+        const response = await apiClient.get<{ user: User; permissions: Permission[] }>(
+          '/auth/me'
+        )
         dispatch(setToken(storedToken))
         dispatch(setUser(response.user))
         dispatch(setPermissions(response.permissions))

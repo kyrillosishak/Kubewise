@@ -12,7 +12,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   permissions: [],
-  loading: false,
+  loading: true, // Start as true to prevent redirect before auth check
 }
 
 const authSlice = createSlice({

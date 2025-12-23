@@ -67,11 +67,40 @@ type SafetyStore interface {
 	TriggerRollback(ctx context.Context, recommendationID string, reason string, autoTriggered bool) (*RollbackEvent, error)
 }
 
+// ClusterStore handles cluster data
+type ClusterStore interface {
+	ListClusters(ctx context.Context) ([]Cluster, error)
+	GetClusterHealth(ctx context.Context, clusterID string) (*ClusterHealth, error)
+}
+
+// AnomalyStore handles anomaly data
+type AnomalyStore interface {
+	ListAnomalies(ctx context.Context, filters AnomalyFilters) ([]Anomaly, error)
+	GetAnomalyDetail(ctx context.Context, anomalyID string) (*AnomalyDetail, error)
+}
+
+// AuthStore handles authentication
+type AuthStore interface {
+	Authenticate(ctx context.Context, email, password string) (*User, string, error)
+	ValidateToken(ctx context.Context, token string) (string, error)
+	GetUser(ctx context.Context, userID string) (*User, error)
+	GetPermissions(ctx context.Context, userID string) ([]Permission, error)
+}
+
 // store is the global store instance
 var store Store
 
 // safetyStore is the global safety store instance
 var safetyStore SafetyStore
+
+// clusterStore is the global cluster store instance
+var clusterStore ClusterStore
+
+// anomalyStore is the global anomaly store instance
+var anomalyStore AnomalyStore
+
+// authStore is the global auth store instance
+var authStore AuthStore
 
 // SetStore sets the global store instance
 func SetStore(s Store) {
@@ -91,4 +120,34 @@ func SetSafetyStore(s SafetyStore) {
 // GetSafetyStore returns the global safety store instance
 func GetSafetyStore() SafetyStore {
 	return safetyStore
+}
+
+// SetClusterStore sets the global cluster store instance
+func SetClusterStore(s ClusterStore) {
+	clusterStore = s
+}
+
+// getClusterStore returns the global cluster store instance
+func getClusterStore() ClusterStore {
+	return clusterStore
+}
+
+// SetAnomalyStore sets the global anomaly store instance
+func SetAnomalyStore(s AnomalyStore) {
+	anomalyStore = s
+}
+
+// getAnomalyStore returns the global anomaly store instance
+func getAnomalyStore() AnomalyStore {
+	return anomalyStore
+}
+
+// SetAuthStore sets the global auth store instance
+func SetAuthStore(s AuthStore) {
+	authStore = s
+}
+
+// getAuthStore returns the global auth store instance
+func getAuthStore() AuthStore {
+	return authStore
 }
