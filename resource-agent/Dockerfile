@@ -46,7 +46,6 @@ RUN case "$TARGETPLATFORM" in \
 
 # Copy actual source code
 COPY crates/ crates/
-COPY proto/ proto/
 
 # Build the actual binary
 RUN case "$TARGETPLATFORM" in \
