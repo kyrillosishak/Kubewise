@@ -52,6 +52,11 @@ func main() {
 	agentStore := storage.NewInMemoryAgentStore(clusterStore, anomalyStore)
 	slog.Info("Agent store initialized - clusters will appear when resource agents connect")
 
+	// Start cluster discovery from kubeconfig and kind
+	ctx := context.Background()
+	storage.StartClusterDiscovery(ctx, clusterStore, 60*time.Second)
+	slog.Info("Cluster discovery started - checking for kind clusters and kubeconfig contexts")
+
 	// Set up Gin router
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
