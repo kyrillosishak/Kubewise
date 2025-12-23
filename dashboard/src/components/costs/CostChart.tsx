@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import {
   LineChart,
   Line,
@@ -12,9 +11,9 @@ import {
   ReferenceDot,
 } from 'recharts'
 import { setCostData, setPeriod, setLoading } from '@/store/slices/costsSlice'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { api } from '@/api'
 import type { Period, CostDataset } from '@/types/costs'
-import type { RootState, AppDispatch } from '@/store'
 
 interface RecommendationImpact {
   date: string
@@ -38,10 +37,10 @@ const PERIODS: { value: Period; label: string }[] = [
 ]
 
 export function CostChart({ impacts = [] }: CostChartProps) {
-  const dispatch = useDispatch<AppDispatch>()
-  const data = useSelector((state: RootState) => state.costs.data)
-  const period = useSelector((state: RootState) => state.costs.period)
-  const loading = useSelector((state: RootState) => state.costs.loading)
+  const dispatch = useAppDispatch()
+  const data = useAppSelector((state) => state.costs.data)
+  const period = useAppSelector((state) => state.costs.period)
+  const loading = useAppSelector((state) => state.costs.loading)
   const [error, setError] = useState<string | null>(null)
 
   const fetchCosts = useCallback(async () => {
