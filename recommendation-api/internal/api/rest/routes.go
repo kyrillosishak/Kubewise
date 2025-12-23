@@ -56,7 +56,9 @@ func RegisterRoutes(r *gin.Engine) {
 		clusters := v1.Group("/clusters")
 		{
 			clusters.GET("", listClustersHandler)
+			clusters.POST("", registerClusterHandler)
 			clusters.GET("/:id/health", getClusterHealthHandler)
+			clusters.DELETE("/:id", deleteClusterHandler)
 		}
 
 		// Anomalies

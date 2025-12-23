@@ -78,3 +78,16 @@ func (s *InMemoryClusterStore) UpdateClusterStatus(ctx context.Context, clusterI
 	}
 	return nil
 }
+
+// DeleteCluster removes a cluster
+func (s *InMemoryClusterStore) DeleteCluster(ctx context.Context, clusterID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.clusters[clusterID]; !exists {
+		return errors.New("cluster not found")
+	}
+
+	delete(s.clusters, clusterID)
+	return nil
+}

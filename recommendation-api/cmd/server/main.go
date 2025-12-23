@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"log/slog"
 	"net"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"github.com/container-resource-predictor/recommendation-api/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/net/context"
 )
 
 func main() {
@@ -50,12 +50,7 @@ func main() {
 
 	// Create agent store that bridges gRPC agents to REST stores
 	agentStore := storage.NewInMemoryAgentStore(clusterStore, anomalyStore)
-	slog.Info("Agent store initialized - clusters will appear when resource agents connect")
-
-	// Start cluster discovery from kubeconfig and kind
-	ctx := context.Background()
-	storage.StartClusterDiscovery(ctx, clusterStore, 60*time.Second)
-	slog.Info("Cluster discovery started - checking for kind clusters and kubeconfig contexts")
+	slog.Info("Agent store initialized - clusters appear when resource agents register via gRPC")
 
 	// Set up Gin router
 	if cfg.Environment == "production" {

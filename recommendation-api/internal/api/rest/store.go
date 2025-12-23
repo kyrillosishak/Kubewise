@@ -71,6 +71,8 @@ type SafetyStore interface {
 type ClusterStore interface {
 	ListClusters(ctx context.Context) ([]Cluster, error)
 	GetClusterHealth(ctx context.Context, clusterID string) (*ClusterHealth, error)
+	RegisterCluster(ctx context.Context, cluster *Cluster) error
+	DeleteCluster(ctx context.Context, clusterID string) error
 }
 
 // AnomalyStore handles anomaly data
