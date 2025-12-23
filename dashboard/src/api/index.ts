@@ -8,6 +8,7 @@ import type {
   SavingsData,
   Period,
   Anomaly,
+  AnomalyDetail,
   AnomalyFilters,
   Cluster,
   ClusterHealth,
@@ -79,6 +80,10 @@ export const api = {
   // Anomalies
   getAnomalies: async (filters?: AnomalyFilters): Promise<Anomaly[]> => {
     return apiClient.get<Anomaly[]>('/v1/anomalies', { params: filters })
+  },
+
+  getAnomalyDetail: async (id: string): Promise<AnomalyDetail> => {
+    return apiClient.get<AnomalyDetail>(`/v1/anomalies/${id}`)
   },
 
   // Clusters
