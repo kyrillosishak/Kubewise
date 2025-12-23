@@ -14,6 +14,7 @@ import (
 	grpcapi "github.com/container-resource-predictor/recommendation-api/internal/api/grpc"
 	"github.com/container-resource-predictor/recommendation-api/internal/api/rest"
 	"github.com/container-resource-predictor/recommendation-api/internal/config"
+	"github.com/container-resource-predictor/recommendation-api/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -33,6 +34,19 @@ func main() {
 		slog.Error("Failed to load configuration", "error", err)
 		os.Exit(1)
 	}
+
+	// Initialize stores
+	authStore := storage.NewInMemoryAuthStore()
+	rest.SetAuthStore(authStore)
+	slog.Info("Auth store initialized with demo user: admin@kubewise.io")
+
+	clusterStore := storage.NewInMemoryClusterStore()
+	rest.SetClusterStore(clusterStore)
+	slog.Info("Cluster store initialized")
+
+	anomalyStore := storage.NewInMemoryAnomalyStore()
+	rest.SetAnomalyStore(anomalyStore)
+	slog.Info("Anomaly store initialized")
 
 	// Set up Gin router
 	if cfg.Environment == "production" {
