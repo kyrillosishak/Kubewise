@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Login } from '@/pages/Login'
 import { AuthCallback } from '@/pages/AuthCallback'
 import { RecommendationList, RecommendationDetail } from '@/components/recommendations'
+import { CostChart, NamespaceCostTable, SavingsSummary } from '@/components/costs'
 
 function App() {
   return (
@@ -44,7 +45,18 @@ function App() {
                 path="/costs"
                 element={
                   <ProtectedRoute>
-                    <div className="p-8">Cost Analytics</div>
+                    <div className="p-6 space-y-6">
+                      <h1 className="text-2xl font-semibold text-gray-900">Cost Analytics</h1>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                          <CostChart />
+                        </div>
+                        <div>
+                          <SavingsSummary />
+                        </div>
+                      </div>
+                      <NamespaceCostTable />
+                    </div>
                   </ProtectedRoute>
                 }
               />
