@@ -11,7 +11,7 @@ import {
   ReferenceDot,
 } from 'recharts'
 import { setCostData, setPeriod, setLoading } from '@/store/slices/costsSlice'
-import { useAppDispatch, useAppSelector } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { api } from '@/api'
 import type { Period, CostDataset } from '@/types/costs'
 

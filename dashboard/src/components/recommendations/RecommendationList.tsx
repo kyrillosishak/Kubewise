@@ -1,21 +1,20 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
 import { setRecommendations, setLoading, setFilters } from '@/store/slices/recommendationsSlice'
 import { api } from '@/api'
 import { RecommendationFilters } from './RecommendationFilters'
 import type { Recommendation, RecommendationFilters as Filters } from '@/types/recommendations'
-import type { RootState, AppDispatch } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 type SortField = 'estimatedSavings' | 'confidence' | 'deployment' | 'namespace' | 'createdAt'
 type SortDirection = 'asc' | 'desc'
 
 export function RecommendationList() {
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const items = useSelector((state: RootState) => state.recommendations.items)
-  const loading = useSelector((state: RootState) => state.recommendations.loading)
-  const filters = useSelector((state: RootState) => state.recommendations.filters)
+  const items = useAppSelector((state) => state.recommendations.items)
+  const loading = useAppSelector((state) => state.recommendations.loading)
+  const filters = useAppSelector((state) => state.recommendations.filters)
   const [sortField, setSortField] = useState<SortField>('estimatedSavings')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +37,7 @@ export function RecommendationList() {
   }, [fetchRecommendations])
 
   const namespaces = useMemo((): string[] => {
-    const ns = new Set(items.map((r: Recommendation) => r.namespace))
+    const ns = new Set(items.map((r) => r.namespace))
     return Array.from(ns).sort()
   }, [items])
 
